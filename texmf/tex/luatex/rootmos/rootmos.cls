@@ -12,10 +12,16 @@
   \toggletrue{@swedish}
 }
 
+\newtoggle{@toc}
+\DeclareOption{toc}{%
+  \toggletrue{@toc}
+}
+
 \newtoggle{@mdu}
 \DeclareOption{mdu}{%
   \toggletrue{@swedish}
   \toggletrue{@apa}
+  \toggletrue{@toc}
   \toggletrue{@mdu}
 }
 
@@ -106,6 +112,7 @@
 }{}
 
 \ifdraft{}{\AtBeginDocument{\maketitle}}
+\ifdraft{}{\AtBeginDocument{\tableofcontents}}
 
 \AtBeginDocument{%
   \renewcommand*{\thefootnote}{\arabic{footnote}}%
