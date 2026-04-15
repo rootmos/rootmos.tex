@@ -31,13 +31,13 @@ function M.setup_addbibresources()
     end)
 end
 
+function M.buildinfo()
+    tex.print("hello")
+end
+
 function M.setup()
     M.setup_jobtype()
     M.setup_addbibresources()
-end
-
-
-function M.setup_citation_commands()
 end
 
 return M

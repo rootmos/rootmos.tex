@@ -2,8 +2,14 @@
 
 \RequirePackage{etoolbox}
 
+\newtoggle{@apacite}
+\DeclareOption{apacite}{%
+  \toggletrue{@apacite}
+}
+
 \newtoggle{@apa}
 \DeclareOption{apa}{%
+  \toggletrue{@apacite}
   \toggletrue{@apa}
 }
 
@@ -67,7 +73,7 @@
 \usepackage{verbatim}
 \usepackage[obeyDraft,textsize=tiny]{todonotes}
 
-\iftoggle{@apa}{%
+\iftoggle{@apacite}{%
   \usepackage[style=apa,backend=biber,useprefix=true]{biblatex}
   \input{rootmos-cite-apa.tex}
 }{% not @apa
@@ -88,16 +94,14 @@
 \def\mdu@email{\url{gbm26001@student.mdu.se}}
 
 \AtBeginDocument{%
-  \renewcommand*{\thefootnote}{}%
-  \footnote{\today}%
   \renewcommand*{\thefootnote}{\fnsymbol{footnote}}%
+  \setcounter{footnote}{1}%
 }
 
+\ifdraft{}{\AtBeginDocument{\maketitle}}
+
 \IfFileExists{./me.tex}{\input{./me.tex}}{%
-  \author{Gustav Behm\footnotemark[2]}
-  \AtBeginDocument{%
-    \footnotetext[2]{\rootmos@email\iftoggle{@mdu}{, \mdu@email}{}}%
-  }
+  \author{Gustav Behm\footnote{\rootmos@email\iftoggle{@mdu}{, \mdu@email}{}}}
   \iftoggle{@apa}{\iftoggle{@mdu}{}{\affiliation{\,}}}{}
 }
 
@@ -105,14 +109,30 @@
   \ifdraft{
     \abstract{\,}
   }
-}{}
+}{
+  \newcommand{\shorttitle}[1]{}
+}
 
 \iftoggle{@mdu}{
   \IfFileExists{./course.tex}{\input{./course.tex}}{}
 }{}
 
-\ifdraft{}{\AtBeginDocument{\maketitle}}
-\ifdraft{}{\AtBeginDocument{\tableofcontents}}
+\iftoggle{@toc}{
+  \ifdraft{}{\AtBeginDocument{\tableofcontents}}
+}
+
+\def\@buildinfo{%
+  \renewcommand*{\thefootnote}{}%
+  \footnotetext{\today}%
+}
+
+\iftoggle{@apa}{
+  \ifdraft{%
+    \AtBeginDocument{\@buildinfo}%
+  }{%
+    \note{\@buildinfo}%
+  }%
+}{\AtBeginDocument{\@buildinfo}}
 
 \AtBeginDocument{%
   \renewcommand*{\thefootnote}{\arabic{footnote}}%
