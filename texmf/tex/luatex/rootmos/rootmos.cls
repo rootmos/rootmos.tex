@@ -55,7 +55,6 @@
 }
 
 \iftoggle{@swedish}{%
-  \usepackage[utf8]{inputenc}
   \usepackage[swedish]{babel}
 }{% not @swedish
   \usepackage[english]{babel}
@@ -123,7 +122,7 @@
 
 \def\@buildinfo{%
   \renewcommand*{\thefootnote}{}%
-  \footnotetext{\today}%
+  \footnotetext{\directlua{require("rootmos").buildinfo()}}%
 }
 
 \iftoggle{@apa}{

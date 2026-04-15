@@ -23,10 +23,11 @@ LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX)
 %.draft.pdf: %.tex prepare
 	$(LATEXMK) --jobname='%A.draft' $<
 
-BUILD_INFO = $(AUX)/build-info.lua
+export BUILD_INFO = $(AUX)/build-info.lua
 prepare: init $(LATEXMKRC) $(BUILD_INFO)
 
 $(BUILD_INFO): FORCE
+	@mkdir -p $(dir $@)
 	$(TOOLS)/build-info -l -o $@
 
 $(LATEXMKRC):

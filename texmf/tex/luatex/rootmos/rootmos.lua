@@ -32,7 +32,12 @@ function M.setup_addbibresources()
 end
 
 function M.buildinfo()
-    tex.print("hello")
+    local B = dofile(os.getenv("BUILD_INFO"))
+    tex.print(string.format("\\href{%s}{\\tt %s}", B.git_commit_url, B.time))
+    tex.print(string.format("\\href{%s}{\\tt %s}", B.git_commit_url, B.git_ref))
+    if B.git_dirty then
+        tex.print("{\\tt(dirty)}")
+    end
 end
 
 function M.setup()
