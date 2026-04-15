@@ -26,6 +26,7 @@
 \newtoggle{@mdu}
 \DeclareOption{mdu}{%
   \toggletrue{@swedish}
+  \toggletrue{@apacite}
   \toggletrue{@apa}
   \toggletrue{@toc}
   \toggletrue{@mdu}
