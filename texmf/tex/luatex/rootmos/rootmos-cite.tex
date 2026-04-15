@@ -1,0 +1,78 @@
+\DeclareCiteCommand{\supercite}[\mkbibsuperscript]
+  {}
+  {[\usebibmacro{prenote}%
+    \usebibmacro{citeindex}%
+    \usebibmacro{cite}%
+    \usebibmacro{postnote}%
+    ]}
+  {\supercitedelim}
+  {}
+
+\def\mklocdefs{%
+    \def\delim{\addcomma\space}%
+    \def\p{\delim\bibstring{page}~}%
+    \def\ps{\delim\bibstring{pages}~}%
+    \def\P{\delim\bibstring{part}~}%
+    \def\l{\delim\bibstring{line}~}%
+    \def\ls{\delim\bibstring{lines}~}%
+    \def\s{\delim\bibstring{paragraph}~}%
+    \def\ss{\delim\bibstring{paragraphs}~}%
+    \def\ch{\delim\bibstring{chapter}~}%
+    \def\title{\delim\iffieldundef{booktitle}{\printfield{title}}{\printfield{booktitle}}}%
+}
+
+\NewDocumentCommand{\tc}{O{} o m}{{\mklocdefs%
+    \IfNoValueTF{#2}{%
+        \supercite[#1]{#3}%
+    }{%
+        \supercite[#1][#2]{#3}%
+    }%
+}}
+
+\NewDocumentCommand{\pc}{O{} o m}{{\mklocdefs%
+    \IfNoValueTF{#2}{%
+        \supercite[#1]{#3}%
+    }{%
+        \supercite[#1][#2]{#3}%
+    }%
+}}
+
+\NewDocumentCommand{\bq}{O{} o m +m}{{\mklocdefs%
+    \IfNoValueTF{#2}{%
+        \blockcquote[#1]{#3}{\ignorespaces#4\unskip}%
+    }{%
+        \blockcquote[#1][#2]{#3}{\ignorespaces#4\unskip}%
+    }%
+}}
+
+\NewDocumentCommand{\tq}{O{} o m +m}{{\mklocdefs%
+    \IfNoValueTF{#2}{%
+        \textcquote[#1]{#3}{\ignorespaces#4\unskip}%
+    }{%
+        \textcquote[#1][#2]{#3}{\ignorespaces#4\unskip}%
+    }%
+}}
+
+\NewDocumentCommand{\pcin}{O{} o m O{} m}{{\mklocdefs%%
+    \mkbibparens{%
+        \IfNoValueTF{#2}{%
+            \nptextcite[#1]{#3}%
+        }{%
+            \nptextcite[#1][#2]{#3}%
+        }%
+        \addcomma\addspace\bibstring{quotedin}\addspace%
+        \nptextcite[#4]{#5}%
+    }%
+}}
+
+\NewDocumentCommand{\tcin}{O{} o m O{} m}{{\mklocdefs%%
+    \citeauthor{#3}\addspace\mkbibparens{%
+        \IfNoValueTF{#2}{%
+            \citeyear[#1]{#3}%
+        }{%
+            \citeyear[#1][#2]{#3}%
+        }%
+        \addcomma\addspace\bibstring{quotedin}\addspace%
+        \nptextcite[#4]{#5}%
+    }%
+}}

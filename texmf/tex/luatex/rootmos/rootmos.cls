@@ -1,0 +1,121 @@
+\ProvidesClass{rootmos}[2026/04/06 v0.0.1 rootmos' document class]
+
+\RequirePackage{etoolbox}
+
+\newtoggle{@apa}
+\DeclareOption{apa}{%
+  \toggletrue{@apa}
+}
+
+\newtoggle{@swedish}
+\DeclareOption{swedish}{%
+  \toggletrue{@swedish}
+}
+
+\newtoggle{@mdu}
+\DeclareOption{mdu}{%
+  \toggletrue{@swedish}
+  \toggletrue{@apa}
+  \toggletrue{@mdu}
+}
+
+\ProcessOptions\relax
+
+\directlua{require("rootmos").setup()}
+
+\RequirePackage[\jobtype]{ifdraft}
+
+\iftoggle{@mdu}{%
+  \ifdraft{% draft
+      \LoadClass[a4paper,doc,draft]{apa7}
+      \setlength{\parskip}{1em}
+      \setcounter{secnumdepth}{3}
+      }{% final
+      \LoadClass[a4paper,stu,final]{apa7}
+      \renewcommand{\baselinestretch}{1.5}
+  }%
+}{% not @mdu
+  \iftoggle{@apa}{% @apa
+    \LoadClass[a4paper,doc,\jobtype]{apa7}
+  }{% not @apa
+    \LoadClass[a4paper,11pt,\jobtype]{article}
+  }
+}
+
+\iftoggle{@swedish}{%
+  \usepackage[utf8]{inputenc}
+  \usepackage[swedish]{babel}
+}{% not @swedish
+  \usepackage[english]{babel}
+}%
+
+\usepackage[a4paper]{geometry}
+
+\usepackage{hyperref}
+\hypersetup{final}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+
+\usepackage{verbatim}
+\usepackage[obeyDraft,textsize=tiny]{todonotes}
+
+\iftoggle{@apa}{%
+  \usepackage[style=apa,backend=biber,useprefix=true]{biblatex}
+  \input{rootmos-cite-apa.tex}
+}{% not @apa
+  \usepackage[style=numeric,backend=biber,useprefix=true]{biblatex}
+  \input{rootmos-cite.tex}
+}
+\directlua{require("rootmos-cite").setup()}
+\addbibresources
+
+% TODO biblatex urlstyle?
+\urlstyle{tt}
+
+\usepackage{csquotes}
+\SetBlockThreshold{0}
+\SetCiteCommand{\pc}
+
+\def\rootmos@email{\url{me@rootmos.\iftoggle{@swedish}{se}{io}}}
+\def\mdu@email{\url{gbm26001@student.mdu.se}}
+
+\AtBeginDocument{%
+  \renewcommand*{\thefootnote}{}%
+  \footnote{\today}%
+  \renewcommand*{\thefootnote}{\fnsymbol{footnote}}%
+}
+
+\IfFileExists{./me.tex}{\input{./me.tex}}{%
+  \author{Gustav Behm\footnotemark[2]}
+  \AtBeginDocument{%
+    \footnotetext[2]{\rootmos@email\iftoggle{@mdu}{, \mdu@email}{}}%
+  }
+  \iftoggle{@apa}{\iftoggle{@mdu}{}{\affiliation{\,}}}{}
+}
+
+\iftoggle{@apa}{
+  \ifdraft{
+    \abstract{\,}
+  }
+}{}
+
+\iftoggle{@mdu}{
+  \IfFileExists{./course.tex}{\input{./course.tex}}{}
+}{}
+
+\ifdraft{}{\AtBeginDocument{\maketitle}}
+
+\AtBeginDocument{%
+  \renewcommand*{\thefootnote}{\arabic{footnote}}%
+  \setcounter{footnote}{0}%
+}{}
+
+\AtEndDocument{%
+  \ifdraft{%
+    \nocite{*}%
+    \clearpage%
+  }{}%
+  \printbibliography%
+}
