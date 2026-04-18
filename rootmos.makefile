@@ -16,12 +16,15 @@ TOOLS = $(MAKEFILE_DIR)/tools
 LATEXMKRC = $(MAKEFILE_DIR)/latexmkrc
 LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX)
 
-%.pdf: %.tex prepare
+%.pdf: %.tex $(AUX)/%.tex.wc prepare
 	$(LATEXMK) $<
-%.final.pdf: %.tex prepare
+%.final.pdf: %.tex $(AUX)/%.tex.wc prepare
 	$(LATEXMK) --jobname='%A.final' $<
-%.draft.pdf: %.tex prepare
+%.draft.pdf: %.tex $(AUX)/%.tex.wc prepare
 	$(LATEXMK) --jobname='%A.draft' $<
+
+$(AUX)/%.tex.wc: %.tex
+	$(TOOLS)/words.sh -o $@ $<
 
 export BUILD_INFO = $(AUX)/build-info.lua
 prepare: init $(LATEXMKRC) $(BUILD_INFO)

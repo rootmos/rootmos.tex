@@ -40,6 +40,16 @@ function M.buildinfo()
     end
 end
 
+function M.wordcount(path)
+    if not path then
+        path = kpse.find_file(status.filename .. ".wc")
+    end
+    local words
+    for l in io.lines(path) do
+        return tonumber(l)
+    end
+end
+
 function M.setup()
     M.setup_jobtype()
     M.setup_addbibresources()
