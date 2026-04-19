@@ -40,12 +40,12 @@
 
 \iftoggle{@mdu}{%
   \ifdraft{% draft
-      \LoadClass[a4paper,doc,draft]{apa7}
-      \setlength{\parskip}{1em}
-      \setcounter{secnumdepth}{3}
-      }{% final
-      \LoadClass[a4paper,stu,final]{apa7}
-      \renewcommand{\baselinestretch}{1.5}
+    \LoadClass[a4paper,doc,draft]{apa7}
+    \setlength{\parskip}{1em}
+    \setcounter{secnumdepth}{3}
+  }{% final
+    \LoadClass[a4paper,stu,final]{apa7}
+    \renewcommand{\baselinestretch}{1.5}
   }%
 }{% not @mdu
   \iftoggle{@apa}{% @apa
@@ -71,7 +71,7 @@
 \usepackage{mathtools}
 
 \usepackage{verbatim}
-\usepackage[obeyDraft,textsize=tiny]{todonotes}
+\usepackage[\jobtype,obeyDraft,textsize=tiny]{todonotes}
 
 \iftoggle{@apacite}{%
   \usepackage[style=apa,backend=biber,useprefix=true]{biblatex}
@@ -82,6 +82,10 @@
 }
 \directlua{require("rootmos-cite").setup()}
 \addbibresources
+
+% https://tex.stackexchange.com/a/588446
+\usepackage{xpatch}
+\xpretobibmacro{doi+url}{\printfield{isbn}}{}{}
 
 % TODO biblatex urlstyle?
 \urlstyle{tt}
@@ -136,7 +140,9 @@
   }{%
     \note{\@buildinfo}%
   }%
-}{\AtBeginDocument{\@buildinfo}}
+}{%
+  \AtBeginDocument{\@buildinfo}%
+}
 
 \AtBeginDocument{%
   \renewcommand*{\thefootnote}{\arabic{footnote}}%

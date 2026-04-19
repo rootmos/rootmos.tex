@@ -27,3 +27,4 @@ latexmk
 texcount
 
 lparse
+xpatch
