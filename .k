@@ -1,0 +1,3 @@
+go() {
+    make -C template
+}
