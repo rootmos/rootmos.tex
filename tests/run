@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+SCRIPT_DIR=$(readlink -f "$0" | xargs dirname)
+ROOT=$(readlink -f "$SCRIPT_DIR/..")
+. "$ROOT/template/.texhelp/activate"
+
+LUA_PATH=
+LUA_PATH="$SCRIPT_DIR/deps/luaunit/?.lua;$LUA_PATH"
+LUA_PATH="$ROOT/texmf/tex/luatex/rootmos/?.lua;$LUA_PATH"
+
+luatex --luaonly "${1-$SCRIPT_DIR/main.lua}"

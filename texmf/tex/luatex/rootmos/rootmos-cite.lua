@@ -7,10 +7,9 @@ local M = {
 }
 
 local def = require("rootmos-utils").def
-local lparse = require("lparse")
 
 local number = lpeg.R"09"^1 / tonumber
-local range = number * lpeg.P"-" * number / table.pack
+local range = number * lpeg.P"-" * number / function(...) local t = table.pack(...) t.n = nil return t end
 local value = range + number
 
 -- TODO LuaUnit tests
@@ -28,7 +27,7 @@ local pattern = field^1
 --print(field:match("p12-3").page)
 --print(field:match("ch2").chapter)
 
-local function match(input)
+function M.parse(input)
     local fs = {}
     for _, f in ipairs({pattern:match(input)}) do
         for k, v in pairs(f) do
@@ -68,6 +67,8 @@ function M.citloc(s)
 end
 
 function M.setup_notes_commands()
+    local lparse = require("lparse")
+
     def("prenote", function()
         local n = lparse.scan("m")
         n = M.citloc(n)
