@@ -41,7 +41,6 @@
 \iftoggle{@mdu}{%
   \ifdraft{% draft
     \LoadClass[a4paper,doc,draft]{apa7}
-    \setlength{\parskip}{1em}
     \setcounter{secnumdepth}{3}
   }{% final
     \LoadClass[a4paper,stu,final]{apa7}
