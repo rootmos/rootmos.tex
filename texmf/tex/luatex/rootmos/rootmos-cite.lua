@@ -12,20 +12,14 @@ local number = lpeg.R"09"^1 / tonumber
 local range = number * lpeg.P"-" * number / function(...) local t = table.pack(...) t.n = nil return t end
 local value = range + number
 
--- TODO LuaUnit tests
-assert(value:match("19") == 19)
---print(value:match("1-3"))
-
+local default = value / function(...) return { page = ... } end
 local page = (lpeg.P"p" * value) / function(...) return { page = ... } end
 local chapter = (lpeg.P"ch" * value) / function(...) return { chapter = ... } end
 local line = (lpeg.P"l" * value) / function(...) return { line = ... } end
 local part = (lpeg.P"P" * value) / function(...) return { part = ... } end
 local paragraph = (lpeg.P"s" * value) / function(...) return { paragraph = ... } end
-local field = page + part + chapter + paragraph + line
+local field = page + part + chapter + paragraph + line + default
 local pattern = field^1
-
---print(field:match("p12-3").page)
---print(field:match("ch2").chapter)
 
 function M.parse(input)
     local fs = {}
@@ -48,7 +42,7 @@ local function render_value(v)
 end
 
 function M.citloc(s)
-    local fs = match(s)
+    local fs = M.parse(s)
     local r = ""
     local i = 0
     for _, k in ipairs(M.fields) do

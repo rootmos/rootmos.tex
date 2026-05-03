@@ -1,4 +1,4 @@
 go() {
-    tests/run
-    #make -C template
+    #tests/run
+    make -C template
 }
