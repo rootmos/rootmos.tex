@@ -1,0 +1,14 @@
+[build]
+arch = [ "make", "wget", "patch" ]
+debian = [ "make", "wget", "patch" ]
+ubuntu = [ "make", "wget", "patch", "bash" ]
+
+[runtime]
+arch = [ "make", "git", "libxcrypt-compat" ]
+ubuntu = [ "make", "git", "ca-certificates" ]
+debian = [ "make", "git", "ca-certificates" ]
+
+[tests]
+arch = [ "make" ]
+ubuntu = [ "make", "libarchive-tools" ]
+debian = [ "make", "libarchive-tools" ]

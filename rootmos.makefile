@@ -1,5 +1,6 @@
 export ROOT ?= $(shell pwd)
 AUX ?= $(ROOT)/aux
+OUTDIR ?= $(ROOT)
 
 TEXHELP_URL ?= https://raw.githubusercontent.com/rootmos/texhelp/refs/heads/master/texhelp
 export TEXHELP_DOTDIR ?= $(ROOT)/.texhelp
@@ -14,7 +15,7 @@ all: $(foreach doc, $(DOCUMENTS), $(foreach type, draft final, $(doc).$(type).pd
 MAKEFILE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TOOLS = $(MAKEFILE_DIR)/tools
 LATEXMKRC = $(MAKEFILE_DIR)/latexmkrc
-LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX)
+LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX) -outdir=$(OUTDIR)
 
 %.pdf: %.tex $(AUX)/%.tex.wc prepare
 	$(LATEXMK) $<
@@ -40,7 +41,7 @@ init: $(TEXHELP_DOTDIR)
 reinit: deepclean init
 
 $(TEXHELP_DOTDIR):
-	wget -O- $(TEXHELP_URL) | sh -s -- -i
+	wget -O- $(TEXHELP_URL) | bash -s -- -i
 
 deps: init $(ROOT)/tl.deps
 	$(TEXHELP) -d

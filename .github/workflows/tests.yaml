@@ -1,0 +1,86 @@
+name: Tests
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [ "archlinux", "debian", "ubuntu" ]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.distro }}:latest
+    env:
+      ARTIFACT_ROOT: /tmp/artifact
+    steps:
+    # https://stackoverflow.com/a/60942437
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+    - name: Check out preparation files
+      uses: actions/checkout@v6
+      with:
+        sparse-checkout: .github/prepare
+        sparse-checkout-cone-mode: false
+
+    - name: Prepare build environment
+      run: .github/prepare -ug
+
+
+    - name: Check out repository code
+      uses: actions/checkout@v6
+
+
+    - name: Restore cached texhelp
+      id: cache-texhelp
+      uses: actions/cache/restore@v5
+      with:
+        path: &texhelp template/.texhelp
+        key: ${{ matrix.distro }}_${{ steps.date.outputs.date }}
+
+    - name: Install texhelp dependencies
+      if: steps.cache-texhelp.outputs.cache-hit != 'true'
+      run: .github/deps -b
+
+    - name: texhelp
+      if: steps.cache-texhelp.outputs.cache-hit != 'true'
+      run: make -C template init
+
+    - name: Remove texhelp dependencies
+      if: steps.cache-texhelp.outputs.cache-hit != 'true'
+      run: .github/deps -b -R
+
+    - name: Save texhelp cache
+      if: steps.cache-texhelp.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: *texhelp
+        key: ${{ steps.cache-texhelp.outputs.cache-primary-key }}
+
+
+    - name: Install runtime dependencies
+      run: .github/deps -r
+
+    - name: Try building the template
+      run: make -C template all AUX="${{ env.ARTIFACT_ROOT }}/${{ env.ARTIFACT }}/template/aux" OUTDIR="${{ env.ARTIFACT_ROOT }}/${{ env.ARTIFACT }}/template/out"
+      env:
+        ARTIFACT: &artifact "${{ github.job }}_${{ matrix.distro }}_${{ steps.date.outputs.date }}_${{ github.run_id }}"
+
+
+    - name: Install test dependencies
+      run: .github/deps -t
+
+    - name: Run tests
+      run: make -C tests
+      env:
+        ARTIFACT: *artifact
+
+    - name: Keep artifacts
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: *artifact
+        path: "${{ env.ARTIFACT_ROOT }}"

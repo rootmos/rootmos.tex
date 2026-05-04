@@ -9,5 +9,6 @@ ROOT=$(readlink -f "$SCRIPT_DIR/..")
 LUA_PATH=
 LUA_PATH="$SCRIPT_DIR/deps/luaunit/?.lua;$LUA_PATH"
 LUA_PATH="$ROOT/texmf/tex/luatex/rootmos/?.lua;$LUA_PATH"
+export LUA_PATH
 
 luatex --luaonly "${1-$SCRIPT_DIR/main.lua}"
