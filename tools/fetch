@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# 2026-05-03T13:02:46+02:00 SHA-256:0917149f437bdcdcce7552c9e03440e412ac7d03e7238f7dc1a20517991764c3
+# 2026-05-04T06:27:37+02:00 SHA-256:51f4cd4ef62b914c26ac7a0371f9a5fa9c1c3300cffad3ab9d63bea310d48fbd
 
 import argparse
 import contextlib
@@ -203,7 +203,8 @@ class Item:
 
     def download(self, root=None, update=None) -> Self:
         path = self.path(root)
-        self.timestamp = datetime.datetime.now().astimezone()
+        if update:
+            self.timestamp = datetime.datetime.now().astimezone()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         self.local = path
 
@@ -293,7 +294,7 @@ def do_add(args):
             item = item.download(root=root)
         item = item.verify(url=args.url, sha256=args.sha256, root=root)
     else:
-        item = Item(url=args.url, sha256=args.sha256, target=target, manifest=manifest)
+        item = Item(url=args.url, sha256=args.sha256, target=target, manifest=manifest, timestamp=datetime.datetime.now().astimezone())
         item.download(root=root)
         manifest.add(item)
 
@@ -319,7 +320,8 @@ def do_download(args):
         if not args.quiet:
             print(os.path.relpath(i.local, start=root))
 
-    manifest.save()
+    if args.update:
+        manifest.save()
 
 def do_verify(args):
     root, manifest = resolve_root_and_manifest(args)
