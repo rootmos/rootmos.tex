@@ -24,7 +24,7 @@ function test_tail_space()
     lu.assertEquals(L.parse("p2-34 foo"), { page={2,34}, tail="foo" })
     lu.assertEquals(L.parse("p1ch2 foo"), { page=1, chapter=2, tail="foo" })
     lu.assertEquals(L.parse("17 foo"), { page=17, tail="foo" })
-    lu.assertEquals(L.parse("2-34 foo"), { page={2,34, tail="foo" } })
+    lu.assertEquals(L.parse("2-34 foo"), { page={2,34}, tail="foo" })
 end
 
 function test_tail_comma()
@@ -33,14 +33,14 @@ function test_tail_comma()
     lu.assertEquals(L.parse("p2-34, foo"), { page={2,34}, tail="foo" })
     lu.assertEquals(L.parse("p1ch2, foo"), { page=1, chapter=2, tail="foo" })
     lu.assertEquals(L.parse("17, foo"), { page=17, tail="foo" })
-    lu.assertEquals(L.parse("2-34, foo"), { page={2,34, tail="foo" } })
+    lu.assertEquals(L.parse("2-34, foo"), { page={2,34}, tail="foo" })
 end
 
 function test_tail_none()
-    lu.assertEquals(L.parse("foo"), { page=1, tail="foo" })
-    lu.assertEquals(L.parse(" foo"), { page=1, tail="foo" })
-    lu.assertEquals(L.parse(",foo"), { page=1, tail="foo" })
-    lu.assertEquals(L.parse(", foo"), { page=1, tail="foo" })
+    lu.assertEquals(L.parse("foo"), { tail="foo" })
+    lu.assertEquals(L.parse(" foo"), { tail="foo" })
+    lu.assertEquals(L.parse(",foo"), { tail="foo" })
+    lu.assertEquals(L.parse(", foo"), { tail="foo" })
     lu.assertEquals(L.parse(",p1"), { tail="p1" })
     lu.assertEquals(L.parse(", p1, \\emph{foo}"), { tail="p1, \\emph{foo}" })
 end

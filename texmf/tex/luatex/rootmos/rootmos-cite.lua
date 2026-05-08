@@ -1,5 +1,12 @@
 local M = {
-    fields = { "page", "part", "chapter", "paragraph", "line" },
+    fields = {
+        ch = "chapter",
+        p = "page",
+        [""] = "page",
+        l = "line",
+        P = "part",
+        s = "paragraph",
+    },
     delims = {
         between_fields = "\\addcomma\\addspace",
         after_prenote = "\\addcomma",
@@ -8,26 +15,63 @@ local M = {
 
 local def = require("rootmos-utils").def
 
-local number = lpeg.R"09"^1 / tonumber
-local range = number * lpeg.P"-" * number / function(...) local t = table.pack(...) t.n = nil return t end
-local value = range + number
+function M.parse(str)
+    local function whitespace(i)
+        local _, j = str:find("^%s*", i)
+        return j + 1
+    end
 
-local default = value / function(...) return { page = ... } end
-local page = (lpeg.P"p" * value) / function(...) return { page = ... } end
-local chapter = (lpeg.P"ch" * value) / function(...) return { chapter = ... } end
-local line = (lpeg.P"l" * value) / function(...) return { line = ... } end
-local part = (lpeg.P"P" * value) / function(...) return { part = ... } end
-local paragraph = (lpeg.P"s" * value) / function(...) return { paragraph = ... } end
-local field = page + part + chapter + paragraph + line + default
-local pattern = field^1
+    local function field(f, i)
+        local j = i+#f
+        if str:sub(i, j-1) ~= f then
+            return nil, i
+        end
+        i = j
 
-function M.parse(input)
+        _, j = str:find("^%d+", i)
+        if j == nil then
+            return nil, i
+        end
+
+        local x = tonumber(str:sub(i, j))
+        i = j + 1
+
+        _, j = str:find("^%-%d+", i)
+        if j == nil then
+            return x, i
+        end
+
+        local y = tonumber(str:sub(i+1, j))
+        return {x, y}, j + 1
+    end
+
     local fs = {}
-    for _, f in ipairs({pattern:match(input)}) do
-        for k, v in pairs(f) do
-            fs[k] = v
+
+    local i, v = whitespace(1), nil
+    while true do
+        local i0 = i
+        for f, k in pairs(M.fields) do
+            v, i = field(f, i)
+            if v ~= nil then
+                fs[k] = v
+                i = whitespace(i)
+            end
+        end
+        if i0 == i then
+            break
         end
     end
+
+
+    if str:sub(i, i) == "," then
+        i = whitespace(i+1)
+    end
+
+    local tail = str:sub(i)
+    if tail ~= "" then
+        fs.tail = tail
+    end
+
     return fs
 end
 
@@ -42,21 +86,25 @@ local function render_value(v)
 end
 
 function M.citloc(s)
-    local fs = M.parse(s)
-    local r = ""
-    local i = 0
-    for _, k in ipairs(M.fields) do
-        local v = fs[k]
-        if v then
+    local fs, r = M.parse(s), ""
+    for k, v in pairs(fs) do
+        if k ~= "tail" then
             local s, plural = render_value(v)
-            if i > 0 then
+            if r ~= "" then
                 r = r .. M.delims.between_fields
             end
             r = r .. string.format("\\bibstring{%s%s}~", k, plural and "s" or "")
             r = r .. s
-            i = i + 1
         end
     end
+
+    if fs.tail then
+        if r ~= "" then
+            r = r .. M.delims.between_fields .. " "
+        end
+        r = r .. fs.tail
+    end
+
     return r
 end
 

@@ -1,5 +1,5 @@
 go() {
-    tests/run go.lua
+    #tests/run go.lua
     #make -C tests
-    #make -C template
+    make -C template
 }
