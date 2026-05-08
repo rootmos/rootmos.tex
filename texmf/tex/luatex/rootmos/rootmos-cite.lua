@@ -85,7 +85,12 @@ local function render_value(v)
     end
 end
 
+local function sanitize(s)
+    return s:gsub("\\emph", "\\mkbibemph")
+end
+
 function M.citloc(s)
+    texio.write_nl(string.format("FOO%%%s%%BAR\n", s))
     local fs, r = M.parse(s), ""
     for k, v in pairs(fs) do
         if k ~= "tail" then
@@ -102,14 +107,24 @@ function M.citloc(s)
         if r ~= "" then
             r = r .. M.delims.between_fields .. " "
         end
-        r = r .. fs.tail
+        r = r .. sanitize(fs.tail)
     end
+
+    texio.write_nl(string.format("FOO%%%s%%BAR\n", r))
 
     return r
 end
 
 function M.setup_notes_commands()
     local lparse = require("lparse")
+
+    def("foo", function()
+        local n = lparse.scan("m")
+        texio.write_nl(string.format("FOO%%%s%%BAR\n", n))
+        tex.print(n)
+        --tex.print(string.format("\\emph{%s}", n))
+        --tex.print(string.format("\\emph{%s}", n))
+    end)
 
     def("prenote", function()
         local n = lparse.scan("m")

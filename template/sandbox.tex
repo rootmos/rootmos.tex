@@ -1,11 +1,21 @@
 \documentclass[apa]{rootmos}
 
+\RenewDocumentCommand{\bar}{m}{\protect\foo{#1}}
+
 \title{Sandbox}
 \shorttitle{Sandbox}
 
 \begin{document}
 
-\pc[17-87, hello!]{eo}
+%\emph{hello}
+\pc[\emph{hello}]{eo}
+%\foo{hello}
+%\bar{\emph{hello}}
+
+%\pc[17-87, hello!]{eo}
 %\pc[17-87, \emph{hello!}]{eo}
+%\pc[\emph{hello!}]{eo}
+%\parencite[\emph{hello!}]{eo}
+%\parencite[\mkbibemph{hello!}]{eo}
 
 \end{document}
