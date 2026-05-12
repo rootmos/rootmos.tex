@@ -1,6 +1,16 @@
-\ProvidesClass{rootmos}[2026/04/06 v0.0.1 rootmos' document class]
+\ProvidesClass{rootmos}[2026/05/12 v0.0.2 rootmos' document class]
 
 \RequirePackage{etoolbox}
+
+\newtoggle{@debugcite}
+\DeclareOption{debugcite}{%
+  \toggletrue{@debugcite}
+}
+
+\newtoggle{@notes}
+\DeclareOption{notes}{%
+  \toggletrue{@notes}
+}
 
 \newtoggle{@apacite}
 \DeclareOption{apacite}{%
@@ -70,7 +80,16 @@
 \usepackage{mathtools}
 
 \usepackage{verbatim}
-\usepackage[\jobtype,obeyDraft,textsize=tiny]{todonotes}
+
+\usepackage[\jobtype,obeyDraft,textsize=tiny,\iftoggle{@swedish}{swedish}{english},tickmarkheight=1mm]{todonotes}
+\NewDocumentCommand{\todof}{O{} m}{%
+    \todo[inline,noinlinepar,size=normalsize,#1,inlinewidth=\textwidth-1.7em]{#2}% TODO
+}
+\NewDocumentCommand{\todoi}{O{} m}{%
+    \ifhmode\hfill\break\fi%
+    \todo[inline,noinlinepar,size=normalsize,#1]{#2}%
+    \ifhmode\vspace{-\parskip}\par\noindent\fi\ignorespaces%
+}
 
 \iftoggle{@apacite}{%
   \usepackage[style=apa,backend=biber,useprefix=true]{biblatex}
@@ -84,14 +103,30 @@
 
 % https://tex.stackexchange.com/a/588446
 \usepackage{xpatch}
-\xpretobibmacro{doi+url}{\printfield{isbn}}{}{}
+\xpretobibmacro{doi+url}{\printfield{isbn} }{}{}
 
 % TODO biblatex urlstyle?
 \urlstyle{tt}
 
-\usepackage{csquotes}
+\iftoggle{@mdu}{%
+  \ifdraft{% draft
+    \usepackage[style=american]{csquotes}
+  }{
+    \usepackage[style=swedish]{csquotes}
+  }
+}{
+  \usepackage[style=american]{csquotes}
+}
 \SetBlockThreshold{0}
 \SetCiteCommand{\pc}
+
+\usepackage{enumitem}
+\setlist{noitemsep,topsep=0.1\baselineskip}
+
+\iftoggle{@notes}{
+  \setlength{\parindent}{0pt}
+  \setlength{\parskip}{0.4\baselineskip}
+}{}
 
 \def\rootmos@email{\url{me@rootmos.\iftoggle{@swedish}{se}{io}}}
 \def\mdu@email{\url{gbm26001@student.mdu.se}}
@@ -150,8 +185,9 @@
 
 \AtEndDocument{%
   \ifdraft{%
-    \nocite{*}%
+    \iftoggle{@debugcite}{\nocite{*}}{}%
     \clearpage%
   }{}%
   \printbibliography%
+  \ifdraft{\listoftodos}{}
 }
