@@ -189,5 +189,5 @@
     \clearpage%
   }{}%
   \printbibliography%
-  \ifdraft{\listoftodos}{}
+  %\ifdraft{\listoftodos}{}
 }
