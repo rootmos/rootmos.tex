@@ -1,4 +1,5 @@
-export ROOT ?= $(shell pwd)
+CURRENT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+export ROOT ?= $(CURRENT_DIR)
 AUX ?= $(ROOT)/aux
 OUTDIR ?= $(ROOT)
 
