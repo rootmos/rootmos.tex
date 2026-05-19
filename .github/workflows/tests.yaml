@@ -2,7 +2,8 @@ name: Tests
 on:
   push:
   workflow_dispatch:
-
+  schedule:
+    - cron: "48 5 * * *"
 jobs:
   tests:
     strategy:
