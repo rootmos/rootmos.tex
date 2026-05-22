@@ -64,13 +64,13 @@
   }
 }
 
+\geometry{a4paper}
+
 \iftoggle{@swedish}{%
   \usepackage[swedish]{babel}
 }{% not @swedish
   \usepackage[english]{babel}
 }%
-
-\usepackage[a4paper]{geometry}
 
 \usepackage{hyperref}
 \hypersetup{final}
