@@ -1,0 +1,13 @@
+\usepackage{cancel}
+
+\usepackage{xspace}
+\usepackage{wasysym}
+\newcommand{\NB}{$\APLcomment$\xspace}
+
+% TODO has to be a way to directly insert the character
+\DeclareMathSymbol\Leadsto {\mathrel}{wasy}{"3B}
+\renewcommand{\leadsto}{\unskip\ \ensuremath{\Leadsto}\xspace}
+
+\usepackage{xcolor,luacolor,lua-ul}
+\LuaULSetHighLightColor{green}
+\NewDocumentCommand{\hl}{+m}{\highLight{#1}}

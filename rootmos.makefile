@@ -3,6 +3,8 @@ export ROOT ?= $(CURRENT_DIR)
 AUX ?= $(ROOT)/aux
 OUTDIR ?= $(ROOT)
 
+DEPS = $(ROOT)/tl.deps
+
 TEXHELP_URL ?= https://raw.githubusercontent.com/rootmos/texhelp/refs/heads/master/texhelp
 export TEXHELP_DOTDIR ?= $(ROOT)/.texhelp
 export TEXHELP := $(TEXHELP_DOTDIR)/bin/texhelp
@@ -29,7 +31,7 @@ $(AUX)/%.tex.wc: %.tex
 	$(TOOLS)/words.sh -o $@ $<
 
 export BUILD_INFO = $(AUX)/build-info.lua
-prepare: init $(LATEXMKRC) $(BUILD_INFO)
+prepare: deps $(LATEXMKRC) $(BUILD_INFO)
 
 $(BUILD_INFO): FORCE
 	@mkdir -p $(dir $@)
@@ -44,18 +46,20 @@ reinit: deepclean init
 $(TEXHELP_DOTDIR):
 	wget -O- $(TEXHELP_URL) | bash -s -- -i
 
-deps: init $(ROOT)/tl.deps
+DEPS_FLAG = $(dir $(DEPS))/.$(notdir $(DEPS)).texhelp
+deps: init $(DEPS_FLAG)
+$(DEPS_FLAG): $(DEPS)
 	$(TEXHELP) -d
+	@touch $@
 
 update: init
 	$(TEXHELP) -u
 
 clean:
-	rm -rf $(AUX)
+	rm -rf $(AUX) .*.texhelp
 	$(TEXHELP) -z
 
-deepclean:
-	rm -rf $(AUX)
+deepclean: clean
 	$(TEXHELP) -Z
 
 .PHONY: FORCE

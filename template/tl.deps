@@ -29,3 +29,11 @@ texcount
 lparse
 xpatch
 enumitem
+
+cancel
+
+luacolor
+lua-ul
+
+eso-pic
+fgruler

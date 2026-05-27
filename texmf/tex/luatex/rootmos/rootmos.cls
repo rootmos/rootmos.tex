@@ -7,9 +7,25 @@
   \toggletrue{@debugcite}
 }
 
+\newtoggle{@debuglayout}
+\DeclareOption{debuglayout}{%
+  \toggletrue{@debuglayout}
+}
+
+\newtoggle{@debug}%
+\DeclareOption{debug}{%
+  \toggletrue{@debugcite}
+  \toggletrue{@debuglayout}
+}
+
 \newtoggle{@notes}
 \DeclareOption{notes}{%
   \toggletrue{@notes}
+}
+
+\newtoggle{@nomargin}
+\DeclareOption{nomargin}{%
+  \toggletrue{@nomargin}
 }
 
 \newtoggle{@apacite}
@@ -64,7 +80,26 @@
   }
 }
 
+\RequirePackage{geometry}
 \geometry{a4paper}
+
+\newlength{\nomargin}
+\setlength{\nomargin}{7mm}
+\iftoggle{@nomargin}{
+  \ifdraft{
+    \geometry{margin=\nomargin, hmargin={\nomargin,\dimexpr\marginparsep+\marginparwidth+\nomargin}}
+  }{
+    \geometry{margin=\nomargin}
+  }
+}{
+  \geometry{margin=20mm}
+}
+
+\iftoggle{@debuglayout}{%
+  \geometry{showframe}
+  \usepackage[type=alledges]{fgruler}
+  \usepackage{layout}
+}
 
 \iftoggle{@swedish}{%
   \usepackage[swedish]{babel}
@@ -126,7 +161,7 @@
 \iftoggle{@notes}{
   \setlength{\parindent}{0pt}
   \setlength{\parskip}{0.4\baselineskip}
-}{}
+}
 
 \def\rootmos@email{\url{me@rootmos.\iftoggle{@swedish}{se}{io}}}
 \def\mdu@email{\url{gbm26001@student.mdu.se}}
@@ -153,7 +188,7 @@
 
 \iftoggle{@mdu}{
   \IfFileExists{./course.tex}{\input{./course.tex}}{}
-}{}
+}
 
 \iftoggle{@toc}{
   \ifdraft{}{\AtBeginDocument{\tableofcontents}}
@@ -181,7 +216,9 @@
 \AtBeginDocument{%
   \renewcommand*{\thefootnote}{\arabic{footnote}}%
   \setcounter{footnote}{0}%
-}{}
+}
+
+\input{rootmos-candy.tex}
 
 \AtEndDocument{%
   \ifdraft{%
@@ -189,5 +226,9 @@
     \clearpage%
   }{}%
   \printbibliography%
-  %\ifdraft{\listoftodos}{}
+  \ifdraft{\listoftodos}{}
 }
+
+\iftoggle{@debuglayout}{%
+  \AtEndDocument{\clearpage\layout{}}
+}{}
