@@ -46,7 +46,7 @@ reinit: deepclean init
 $(TEXHELP_DOTDIR):
 	wget -O- $(TEXHELP_URL) | bash -s -- -i
 
-DEPS_FLAG = $(dir $(DEPS))/.$(notdir $(DEPS)).texhelp
+DEPS_FLAG = $(dir $(DEPS)).$(notdir $(DEPS)).texhelp
 deps: init $(DEPS_FLAG)
 $(DEPS_FLAG): $(DEPS)
 	$(TEXHELP) -d
