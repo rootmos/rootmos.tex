@@ -17,8 +17,22 @@ shift $((OPTIND-1))
 TMP=$(mktemp -d)
 trap 'rm -rf $TMP' EXIT
 
+cat <<'EOF' >"$TMP/opt"
+%macro \pc [ignore]
+%macro \tc [ignore]
+%macro \tq [ignore,other]
+%macro \bq [ignore,other]
+%macro \pcin [ignore,ignore]
+%macro \tcin [ignore,ignore]
+%macro \bqin [ignore,ignore,other]
+%macro \tqin [ignore,ignore,other]
+
+%macro \todo [ignore]
+%macro \todoi [ignore]
+EOF
+
 set +e
-"$TEXHELP" -e texcount -1 -sum=1 "$1" 1>"$TMP/words" 2>"$TMP/stderr"
+"$TEXHELP" -e texcount -opt="$TMP/opt" -1 -sum=1 "$1" 1>"$TMP/words" 2>"$TMP/stderr"
 EC=$?
 set -e
 if [[ $EC -ne 0 ]]; then

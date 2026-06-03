@@ -1,5 +1,12 @@
 go() {
     #tests/run go.lua
     #make -C tests
-    make -C template
+    #(cd template; make aux/sandbox.tex.wc && aux/sandbox.tex.wc)
+    (
+        set -o errexit
+        cd template
+        . .texhelp/activate
+        texhelp -e texcount sandbox.tex
+        ../tools/words.sh sandbox.tex
+    )
 }
