@@ -203,14 +203,14 @@
   \footnotetext{\directlua{require("rootmos").buildinfo()}}%
 }
 
-\iftoggle{@apa}{
-  \ifdraft{%
-    \AtBeginDocument{\@buildinfo}%
-  }{%
-    \note{\@buildinfo}%
-  }%
-}{%
+\ifdraft{%
   \AtBeginDocument{\@buildinfo}%
+}{%
+  \iftoggle{@mdu}{%
+    \note{\@buildinfo}%
+  }{%
+    \AtBeginDocument{\@buildinfo}%
+  }
 }
 
 \AtBeginDocument{%

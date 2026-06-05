@@ -40,13 +40,20 @@ function M.buildinfo()
     end
 end
 
-function M.wordcount(path)
+function M.wordcount(path, other)
     if not path then
         path = kpse.find_file(status.filename .. ".wc")
     end
-    local words
-    for l in io.lines(path) do
-        return tonumber(l)
+    local w = dofile(path)
+
+    if other == nil then
+        other = M.jobtype == "draft"
+    end
+
+    if other then
+        return string.format("%d (+%d=%d)", w.text, w.other, w.text + w.other)
+    else
+        return string.format("%d", w.text)
     end
 end
 

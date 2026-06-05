@@ -5,8 +5,9 @@ go() {
     (
         set -o errexit
         cd template
-        . .texhelp/activate
-        texhelp -e texcount sandbox.tex
-        ../tools/words.sh sandbox.tex
+        make all
+        #. .texhelp/activate
+        #texhelp -e texcount sandbox.tex
+        #../tools/words.sh sandbox.tex
     )
 }
