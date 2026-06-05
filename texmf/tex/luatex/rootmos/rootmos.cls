@@ -58,6 +58,11 @@
   \toggletrue{@mdu}
 }
 
+\newtoggle{@notme}
+\DeclareOption{notme}{%
+  \toggletrue{@notme}
+}
+
 \ProcessOptions\relax
 
 \directlua{require("rootmos").setup()}
@@ -173,9 +178,11 @@
 
 \ifdraft{}{\AtBeginDocument{\maketitle}}
 
-\IfFileExists{./me.tex}{\input{./me.tex}}{%
-  \author{Gustav Behm\footnote{\rootmos@email\iftoggle{@mdu}{, \mdu@email}{}}}
-  \iftoggle{@apa}{\iftoggle{@mdu}{}{\affiliation{\,}}}{}
+\iftoggle{@notme}{}{%
+  \IfFileExists{./me.tex}{\input{./me.tex}}{%
+    \author{Gustav Behm\footnote{\rootmos@email\iftoggle{@mdu}{, \mdu@email}{}}}
+    \iftoggle{@apa}{\iftoggle{@mdu}{}{\affiliation{\,}}}{}
+  }
 }
 
 \iftoggle{@apa}{
