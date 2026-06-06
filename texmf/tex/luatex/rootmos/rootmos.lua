@@ -1,6 +1,7 @@
 local M = {}
 
 local def = require("rootmos-utils").def
+local luaaux = require("rootmos-utils").luaaux
 
 local lparse = require("lparse")
 
@@ -31,8 +32,8 @@ function M.setup_addbibresources()
     end)
 end
 
-function M.buildinfo()
-    local B = dofile(os.getenv("BUILD_INFO"))
+function M.buildinfo(path)
+    local B = luaaux(path, "build-info.lua")
     tex.print(string.format("\\href{%s}{\\tt %s}", B.git_commit_url, B.time))
     tex.print(string.format("\\href{%s}{\\tt %s}", B.git_commit_url, B.git_ref))
     if B.git_dirty then
@@ -41,19 +42,16 @@ function M.buildinfo()
 end
 
 function M.wordcount(path, other)
-    if not path then
-        path = kpse.find_file(status.filename .. ".wc")
-    end
-    local w = dofile(path)
+    local W = luaaux(path, "wc")
 
     if other == nil then
         other = M.jobtype == "draft"
     end
 
     if other then
-        return string.format("%d (+%d=%d)", w.text, w.other, w.text + w.other)
+        return string.format("%d (+%d=%d)", W.text, W.other, W.text + W.other)
     else
-        return string.format("%d", w.text)
+        return string.format("%d", W.text)
     end
 end
 

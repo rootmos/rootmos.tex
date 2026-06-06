@@ -7,4 +7,11 @@ function M.def(name, f)
     token.set_lua(name, fid)
 end
 
+function M.luaaux(path, suffix)
+    if not path then
+        path = status.filename .. "." .. suffix
+    end
+    return dofile(kpse.find_file(path, true))
+end
+
 return M

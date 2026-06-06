@@ -20,22 +20,27 @@ TOOLS = $(MAKEFILE_DIR)/tools
 LATEXMKRC = $(MAKEFILE_DIR)/latexmkrc
 LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX) -outdir=$(OUTDIR)
 
-%.pdf: %.tex $(AUX)/%.tex.wc prepare
+prereqs = %.tex $(AUX)/%.tex.wc $(AUX)/%.tex.build-info.lua | prepare
+
+%.pdf: $(call prereqs)
 	$(LATEXMK) $<
-%.final.pdf: %.tex $(AUX)/%.tex.wc prepare
+%.final.pdf: $(call prereqs)
 	$(LATEXMK) --jobname='%A.final' $<
-%.draft.pdf: %.tex $(AUX)/%.tex.wc prepare
+%.draft.pdf: $(call prereqs)
 	$(LATEXMK) --jobname='%A.draft' $<
 
-$(AUX)/%.tex.wc: %.tex
+.PRECIOUS: $(AUX)/%.wc
+$(AUX)/%.wc: %
 	$(TOOLS)/words.sh -o $@ $<
 
-export BUILD_INFO = $(AUX)/build-info.lua
-prepare: deps $(LATEXMKRC) $(BUILD_INFO)
-
-$(BUILD_INFO): FORCE
-	@mkdir -p $(dir $@)
+.PRECIOUS: $(AUX)/%.build-info.lua
+$(AUX)/%.build-info.lua: %
 	$(TOOLS)/build-info -l -o $@
+
+$(AUX):
+	@mkdir -p $@
+
+prepare: deps $(LATEXMKRC) $(AUX)
 
 $(LATEXMKRC):
 	$(MAKEFILE_DIR)/latexmkrc.sh $(LATEXMKRC)
