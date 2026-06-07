@@ -20,7 +20,12 @@ TOOLS = $(MAKEFILE_DIR)/tools
 LATEXMKRC = $(MAKEFILE_DIR)/latexmkrc
 LATEXMK = $(TEXHELP) -m -- -r $(LATEXMKRC) -pdflua -auxdir=$(AUX) -outdir=$(OUTDIR)
 
+QUICK ?= 1
+ifeq ($(QUICK),1)
 prereqs = %.tex $(AUX)/%.tex.wc $(AUX)/%.tex.build-info.lua | prepare
+else
+prereqs = %.tex $(AUX)/%.tex.wc $(AUX)/%.tex.build-info.lua FORCE | prepare
+endif
 
 %.pdf: $(call prereqs)
 	$(LATEXMK) $<

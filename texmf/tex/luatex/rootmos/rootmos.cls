@@ -139,11 +139,13 @@
   \input{rootmos-cite.tex}
 }
 \directlua{require("rootmos-cite").setup()}
+
+\DeclareBibliographyCategory{ignore}
 \addbibresources
 
 % https://tex.stackexchange.com/a/588446
 \usepackage{xpatch}
-\xpretobibmacro{doi+url}{\printfield{isbn} }{}{}
+\xpretobibmacro{doi+url}{\printfield{isbn}}{}{}
 
 % TODO biblatex urlstyle?
 \urlstyle{tt}
@@ -205,9 +207,9 @@
   \renewcommand*{\thefootnote}{}%
   \footnotetext{%
     \iftoggle{@swedish}{Antal ord}{Word count}:
-    \directlua{tex.print(require("rootmos").wordcount())}
+    \directlua{require("rootmos").wordcount()}
   }%
-  \footnotetext{\directlua{require("rootmos").buildinfo()}}%
+  \footnotetext{\directlua{tex.print(require("rootmos").buildinfo())}}%
 }
 
 \ifdraft{%
@@ -232,7 +234,7 @@
     \iftoggle{@debugcite}{\nocite{*}}{}%
     \clearpage%
   }{}%
-  \printbibliography%
+  \printbibliography[notcategory=ignore]%
   \ifdraft{\listoftodos}{}
 }
 

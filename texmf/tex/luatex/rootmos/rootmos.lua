@@ -44,14 +44,13 @@ end
 function M.wordcount(path, other)
     local W = luaaux(path, "wc")
 
+    tex.print(tostring(W.text))
+
     if other == nil then
         other = M.jobtype == "draft"
     end
-
     if other then
-        return string.format("%d (+%d=%d)", W.text, W.other, W.text + W.other)
-    else
-        return string.format("%d", W.text)
+        tex.print(string.format("(+%d=%d)", W.other, W.text + W.other))
     end
 end
 
