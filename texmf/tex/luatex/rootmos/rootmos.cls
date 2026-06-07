@@ -205,10 +205,12 @@
 
 \def\@buildinfo{%
   \renewcommand*{\thefootnote}{}%
-  \footnotetext{%
-    \iftoggle{@swedish}{Antal ord}{Word count}:
-    \directlua{require("rootmos").wordcount()}
-  }%
+  \ifdraft{%
+    \footnotetext{%
+      \iftoggle{@swedish}{Antal ord}{Word count}:
+      \directlua{require("rootmos").wordcount()}
+    }%
+  }{}%
   \footnotetext{\directlua{tex.print(require("rootmos").buildinfo())}}%
 }
 
