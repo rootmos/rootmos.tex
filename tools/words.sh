@@ -27,6 +27,10 @@ cat <<'EOF' >"$TMP/opt"
 %macro \bqin [ignore,ignore,other]
 %macro \tqin [ignore,ignore,other]
 
+%macro \q [text]
+%macro \qo [other]
+%macro \qi [ignore]
+
 %macro \todo [ignore]
 %macro \todoi [ignore]
 EOF

@@ -5,7 +5,7 @@ go() {
     (
         set -o errexit
         cd template
-        make all
+        make QUICK=0
         #. .texhelp/activate
         #texhelp -e texcount sandbox.tex
         #../tools/words.sh sandbox.tex
