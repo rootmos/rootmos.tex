@@ -162,9 +162,9 @@
 \SetBlockThreshold{0}
 \SetCiteCommand{\pc}
 
-\NewDocumentCommand{\q}{m}{\enquote{#1}}
-\NewDocumentCommand{\qo}{m}{\enquote{#1}}
-\NewDocumentCommand{\qi}{m}{\enquote{#1}}
+\NewDocumentCommand{\q}{m}{\enquote{\ignorespaces#1\unskip}}
+\NewDocumentCommand{\qo}{m}{\enquote{\ignorespaces#1\unskip}}
+\NewDocumentCommand{\qi}{m}{\enquote{\ignorespaces#1\unskip}}
 
 \usepackage{enumitem}
 \setlist{noitemsep,topsep=0.1\baselineskip}
