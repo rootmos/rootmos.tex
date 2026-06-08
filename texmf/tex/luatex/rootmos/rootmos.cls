@@ -207,24 +207,25 @@
   \ifdraft{}{\AtBeginDocument{\tableofcontents}}
 }
 
-\def\@buildinfo{%
+\def\@meta{%
   \renewcommand*{\thefootnote}{}%
-  \ifdraft{%
-    \footnotetext{%
-      \iftoggle{@swedish}{Antal ord}{Word count}:
-      \directlua{require("rootmos").wordcount()}
-    }%
-  }{}%
-  \footnotetext{\directlua{tex.print(require("rootmos").buildinfo())}}%
+  \directlua{require("rootmos").print_meta()}%
+  %\ifdraft{%
+    %\footnotetext{%
+      %%\iftoggle{@swedish}{Antal ord}{Word count}:
+      %%\directlua{require("rootmos").wordcount()}
+    %}%
+  %}{}%
+  %\footnotetext{\directlua{tex.print(require("rootmos").buildinfo())}}%
 }
 
 \ifdraft{%
-  \AtBeginDocument{\@buildinfo}%
+  \AtBeginDocument{\@meta}%
 }{%
   \iftoggle{@mdu}{%
-    \note{\@buildinfo}%
+    \note{\@meta}%
   }{%
-    \AtBeginDocument{\@buildinfo}%
+    \AtBeginDocument{\@meta}%
   }
 }
 
