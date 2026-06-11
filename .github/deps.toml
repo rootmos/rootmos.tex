@@ -1,7 +1,7 @@
 [build]
-arch = [ "make", "wget", "patch" ]
-debian = [ "make", "wget", "patch" ]
-ubuntu = [ "make", "wget", "patch", "bash" ]
+arch = [ "make", "wget", "patch", "fping", "jq", "perl-list-moreutils", "rsync" ]
+debian = [ "make", "wget", "patch", "fping", "jq", "liblist-moreutils-perl", "rsync", "curl" ]
+ubuntu = [ "make", "wget", "patch", "bash", "fping", "jq", "liblist-moreutils-perl", "rsync", "curl" ]
 
 [runtime]
 arch = [ "make", "git", "libxcrypt-compat" ]

@@ -46,10 +46,16 @@ jobs:
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
       run: .github/deps -b
 
-    # TODO the initialization should *fail*
     - name: texhelp
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
-      run: make -C template init
+      run: make -C template init TEXHELP_MIRROR=
+
+    - name: Save texhelp cache
+      if: steps.cache-texhelp.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: *texhelp
+        key: ${{ steps.cache-texhelp.outputs.cache-primary-key }}
 
     - name: Remove texhelp dependencies
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
@@ -63,14 +69,6 @@ jobs:
       run: make -C template all AUX="${{ env.ARTIFACT_ROOT }}/${{ env.ARTIFACT }}/template/aux" OUTDIR="${{ env.ARTIFACT_ROOT }}/${{ env.ARTIFACT }}/template/out"
       env:
         ARTIFACT: &artifact "${{ github.job }}_${{ matrix.distro }}_${{ steps.date.outputs.date }}_${{ github.run_id }}"
-
-    # TODO
-    - name: Save texhelp cache
-      if: steps.cache-texhelp.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v5
-      with:
-        path: *texhelp
-        key: ${{ steps.cache-texhelp.outputs.cache-primary-key }}
 
 
     - name: Install test dependencies
