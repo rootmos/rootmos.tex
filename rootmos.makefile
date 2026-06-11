@@ -59,7 +59,7 @@ $(TEXHELP_DOTDIR):
 DEPS_FLAG = $(dir $(DEPS)).$(notdir $(DEPS)).texhelp
 deps: init $(DEPS_FLAG)
 $(DEPS_FLAG): $(DEPS)
-	$(TEXHELP) -d
+	$(TEXHELP) -d $(MAKEFILE_DIR)/template/tl.deps
 	@touch $@
 
 update: init
