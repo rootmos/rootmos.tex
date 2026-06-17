@@ -140,8 +140,8 @@
 }
 \directlua{require("rootmos-cite").setup()}
 
-\DeclareBibliographyCategory{ignore}
 \addbibresources
+\input{rootmos-skeleton.tex}
 
 % https://tex.stackexchange.com/a/588446
 \usepackage{xpatch}
@@ -210,13 +210,6 @@
 \def\@meta{%
   \renewcommand*{\thefootnote}{}%
   \directlua{require("rootmos").print_meta()}%
-  %\ifdraft{%
-    %\footnotetext{%
-      %%\iftoggle{@swedish}{Antal ord}{Word count}:
-      %%\directlua{require("rootmos").wordcount()}
-    %}%
-  %}{}%
-  %\footnotetext{\directlua{tex.print(require("rootmos").buildinfo())}}%
 }
 
 \ifdraft{%
@@ -241,8 +234,9 @@
     \iftoggle{@debugcite}{\nocite{*}}{}%
     \clearpage%
   }{}%
-  \printbibliography[notcategory=ignore]%
-  \ifdraft{\listoftodos}{}
+  \printbibliography[notcategory=skeleton]%
+  \ifdraft{\printbibliography[category=skeleton,title={Skeleton references}]}{}%
+  \ifdraft{\listoftodos}{}%
 }
 
 \iftoggle{@debuglayout}{%

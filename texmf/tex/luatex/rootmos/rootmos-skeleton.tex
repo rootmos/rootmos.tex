@@ -1,0 +1,19 @@
+\DeclareBibliographyCategory{skeleton}
+
+\RequirePackage{newfile}
+
+\newoutputstream{skeleton}
+\openoutputfile{\jobname.skeleton.bib}{skeleton}
+
+\NewDocumentCommand{\skeleton}{m m O{} O{}}{
+    \addtostream{skeleton}{%
+        @article{#1,
+            author = {#2},
+            year = {#3},
+            title = {#4},
+        }
+    }
+    \addtocategory{skeleton}{#1}
+}
+
+\addbibresource{\jobname.skeleton.bib}

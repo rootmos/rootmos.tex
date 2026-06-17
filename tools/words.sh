@@ -27,6 +27,8 @@ cat <<'EOF' >"$TMP/opt"
 %macro \bqin [ignore,ignore,other]
 %macro \tqin [ignore,ignore,other]
 
+%macro \skeleton [ignore,ignore,option:ignore,option:ignore]
+
 %macro \q [text]
 %macro \qo [other]
 %macro \qi [ignore]
