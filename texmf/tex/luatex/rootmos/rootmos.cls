@@ -235,7 +235,7 @@
     \clearpage%
   }{}%
   \printbibliography[notcategory=skeleton]%
-  \ifdraft{\printbibliography[category=skeleton,title={Skeleton references}]}{}%
+  \ifdraft{\printbibliography[category=skeleton,title={\iftoggle{@swedish}{Skelettreferenser}{Skeleton references}}]}{}%
   \ifdraft{\listoftodos}{}%
 }
 
