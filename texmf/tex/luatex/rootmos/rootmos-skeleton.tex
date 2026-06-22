@@ -5,15 +5,15 @@
 \newoutputstream{skeleton}
 \openoutputfile{\jobname.skeleton.bib}{skeleton}
 
-\NewDocumentCommand{\skeleton}{m m O{} O{}}{
+\NewDocumentCommand{\skeleton}{O{article} m m O{} O{}}{
     \addtostream{skeleton}{%
-        @article{#1,
-            author = {#2},
-            year = {#3},
-            title = {#4},
+        @#1{#2,
+            author = {#3},
+            year = {#4},
+            title = {#5},
         }
     }
-    \addtocategory{skeleton}{#1}
+    \addtocategory{skeleton}{#2}
 }
 
 \addbibresource{\jobname.skeleton.bib}
