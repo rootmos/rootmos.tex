@@ -68,12 +68,12 @@ update: init
 clean:
 	rm -rf $(AUX) .*.texhelp
 ifneq ($(wildcard $(TEXHELP)),)
-	$(TEXHELP) -z || true
+	$(TEXHELP) -z
 endif
 
 deepclean: clean
 ifneq ($(wildcard $(TEXHELP)),)
-	$(TEXHELP) -Z || true
+	$(TEXHELP) -Z
 endif
 	rm -rf $(TEXHELP_DOTDIR)
 
