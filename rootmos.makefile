@@ -67,10 +67,15 @@ update: init
 
 clean:
 	rm -rf $(AUX) .*.texhelp
-	$(TEXHELP) -z
+ifneq ($(wildcard $(TEXHELP)),)
+	$(TEXHELP) -z || true
+endif
 
 deepclean: clean
-	$(TEXHELP) -Z
+ifneq ($(wildcard $(TEXHELP)),)
+	$(TEXHELP) -Z || true
+endif
+	rm -rf $(TEXHELP_DOTDIR)
 
 .PHONY: FORCE
 .PHONY: prepare

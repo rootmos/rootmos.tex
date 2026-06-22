@@ -46,9 +46,9 @@ jobs:
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
       run: .github/deps -b
 
-    - name: texhelp
+    - name: Initialize texhelp
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
-      run: make -C template init TEXHELP_MIRROR=
+      run: tools/retry -vz30s -- make -C template deepclean init TEXHELP_MIRROR=
 
     - name: Save texhelp cache
       if: steps.cache-texhelp.outputs.cache-hit != 'true'

@@ -1,0 +1,47 @@
+#!/bin/bash
+# retry
+# https://git.sr.ht/~rootmos/scripts f8d128ff97b71315c8d3a2732347921d7639a874
+# 2026-06-22T11:50:17+02:00 SHA-256:712d29b5b3eeec53692ad2925bf1728f30f8901962abed598e0882a6e3c1e057
+# sed "2,5d" | sha256sum | cut -f1 -d" "
+
+set -o nounset -o pipefail -o errexit
+
+N=3
+VERBOSE=
+SLEEP=
+while getopts "n:vz:-" OPT; do
+    case $OPT in
+        n) N=$OPTARG ;;
+        v) VERBOSE=1 ;;
+        z) SLEEP=$OPTARG ;;
+        -) break ;;
+        ?) exit 2 ;;
+    esac
+done
+shift $((OPTIND-1))
+
+log() {
+    if [[ -n $VERBOSE ]]; then
+        echo 1>&2 "$(date -Is)" "$@"
+    fi
+}
+
+for n in $(seq "$N"); do
+    log "starting attempt $n/$N"
+    set +e
+    "$@"
+    EC=$?
+    set -e
+
+    if [[ $EC -eq 0 ]]; then
+        log "attempt $n succeeded"
+        break
+    fi
+    log "attempt $n non-zero exit: $EC"
+
+    if [[ -n $SLEEP ]]; then
+        log "sleeping $SLEEP..."
+        sleep "$SLEEP"
+    fi
+done
+exit "$EC"
