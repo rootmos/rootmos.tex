@@ -63,6 +63,11 @@
   \toggletrue{@notme}
 }
 
+\newtoggle{@fancy}
+\DeclareOption{fancy}{%
+  \toggletrue{@fancy}
+}
+
 \ProcessOptions\relax
 
 \directlua{require("rootmos").setup()}

@@ -11,3 +11,14 @@
 \usepackage{xcolor,luacolor,lua-ul}
 \LuaULSetHighLightColor{green}
 \NewDocumentCommand{\hl}{+m}{\highLight{#1}}
+
+\usepackage{xpunctuate}
+\directlua{require("rootmos-abbrev").setup{"english"}}
+
+\iftoggle{@swedish}{%
+    \directlua{require("rootmos-abbrev").setup{"swedish"}}%
+}{}
+
+\iftoggle{@fancy}{%
+    \directlua{require("rootmos-abbrev").setup{"fancy"}}%
+}{}

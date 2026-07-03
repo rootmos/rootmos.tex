@@ -6,7 +6,7 @@ go() {
         set -o errexit
         cd template
         #make clean skeleton.draft.pdf QUICK=0
-        make skeleton.draft.pdf QUICK=0
+        make abbrev.draft.pdf QUICK=0
         #. .texhelp/activate
         #texhelp -e texcount sandbox.tex
         #../tools/words.sh skeleton.tex
