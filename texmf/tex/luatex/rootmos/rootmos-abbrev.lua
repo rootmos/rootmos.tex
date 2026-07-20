@@ -14,6 +14,7 @@ M.styles.swedish = {
     tex = "t.ex.",
     pga = "p.g.a.",
     ev = "ev.",
+    sk = "s.k.",
 
     jfr = "jfr",
     jfm = "jfr m.",
@@ -21,6 +22,7 @@ M.styles.swedish = {
     dvs = "dvs.",
     osv = "osv.",
     etc = "etc.",
+    ang = "ang.",
 }
 
 M.styles.fancy = {
