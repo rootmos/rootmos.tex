@@ -22,3 +22,7 @@
 \iftoggle{@fancy}{%
     \directlua{require("rootmos-abbrev").setup{"fancy"}}%
 }{}
+
+\iftoggle{@informal}{%
+    \directlua{require("rootmos-abbrev").setup{"informal"}}%
+}{}

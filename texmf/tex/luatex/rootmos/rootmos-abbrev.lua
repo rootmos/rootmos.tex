@@ -8,6 +8,10 @@ M.styles.english = {
     etc = "etc.",
 }
 
+M.styles.fancy = {
+    etc = "\\&c.",
+}
+
 -- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
 M.styles.swedish = {
     bla = "bl.a.",
@@ -17,30 +21,40 @@ M.styles.swedish = {
     sk = "s.k.",
 
     jfr = "jfr",
-    jfm = "jfr m.",
+    jfm = { "jfr", "m." },
 
     dvs = "dvs.",
     osv = "osv.",
     etc = "etc.",
     ang = "ang.",
+
+    iaf = { "i", "alla", "fall" },
 }
 
-M.styles.fancy = {
-    etc = "\\&c.",
+M.styles.informal = {
+    iaf = "iaf",
+    jfm = "jfm",
 }
 
 local def = require("rootmos-utils").def
 local lparse = require("lparse")
 
 local function abbrev(m)
-    local w = function(x) return x end
-
-    if m:sub(-1) == "." then
-        w = function(x) return string.format("\\xperiodafter{%s}", x) end
-        m = m:sub(1, -2)
+    if type(m) == "string" then
+        m = { m }
     end
 
-    return w(string.format("\\mbox{%s}",  m))
+    local s = ""
+
+    for _, w in ipairs(m) do
+        if w:sub(-1) == "." then
+            s = s .. string.format([[\xperiodafter{\mbox{%s}}]], w:sub(1, -2))
+        else
+            s = s .. string.format([[\mbox{%s}\xspace]], w)
+        end
+    end
+
+    return s
 end
 
 local did_common_setup = false
@@ -68,6 +82,7 @@ function M.setup(styles)
 
     for _, s in ipairs(styles or {}) do
         if type(s) == "string" then
+            texio.write_nl(string.format("applying abbreviation style: %s\n", s))
             s = M.styles[s]
         end
         apply(s)
