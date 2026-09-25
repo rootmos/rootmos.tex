@@ -1,0 +1,31 @@
+#!/bin/bash
+# stdout
+# https://git.sr.ht/~rootmos/scripts dc7975c85a0e97c00f52c1f380729d9e7fad095f
+# 2026-09-25T17:46:39+02:00 SHA-256:80204f6d23f7f6f15ef135a8e62be65364910e7558ee372f213450479f70e519
+# sed "2,5d" | sha256sum | cut -f1 -d" "
+
+set -o nounset -o pipefail -o errexit
+
+OUTPUT=/dev/stdout
+while getopts "o:-" OPT; do
+    case $OPT in
+        o) OUTPUT=$OPTARG ;;
+        -) break ;;
+        ?) exit 2 ;;
+    esac
+done
+shift $((OPTIND-1))
+
+TMP=$(mktemp -d)
+trap 'rm -rf $TMP' EXIT
+
+set +o errexit
+"$@" >"$TMP/stdout"
+EC=$?
+set -o errexit
+
+if [[ $EC -ne 0 ]]; then
+    exit "$EC"
+fi
+
+cp "$TMP/stdout" "$OUTPUT"

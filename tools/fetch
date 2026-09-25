@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
-# 2026-05-04T06:27:37+02:00 SHA-256:51f4cd4ef62b914c26ac7a0371f9a5fa9c1c3300cffad3ab9d63bea310d48fbd
+# 2026-09-25T17:46:31+02:00 SHA-256:a7cfac2bea4602d60df97f08d492c18a67092c70a60e588b29a342aafb58d8f8
 
 import argparse
 import contextlib
 import datetime
 import hashlib
 import json
+import logging
 import os
 import random
+import shutil
 import stat
 import string
+import subprocess
 import sys
 import urllib.request
 from dataclasses import dataclass
-from typing import Self, Tuple
+from pathlib import Path
+from typing import Any, Generator, Self
 
-import logging
 logger = logging.getLogger(__name__)
 
 whoami = "fetch"
 env_prefix = f"{whoami.upper()}_"
 
-def env(var, default=None):
+def env(var, default=None) -> str | None:
     return os.environ.get(env_prefix + var, default)
 
 def chmod_plus_x(path):
@@ -56,28 +59,40 @@ def parse_args():
 
     default_root = env("ROOT", ".")
     default_manifest_filename = env("MANIFEST_FILENAME", f".{whoami}.json")
-    parser.add_argument("--root", metavar="ROOT", default=default_root, help="act relative the directory ROOT")
-    parser.add_argument("--manifest-filename", metavar="FILENAME", default=default_manifest_filename, help="load manifest from FILENAME (relative to the ROOT)")
-    parser.add_argument("--manifest", metavar="PATH", default=env("MANIFEST"), help="load manifest from PATH")
+    parser.add_argument("-R", "--root", metavar="ROOT", default=default_root, type=Path, help="act relative the directory ROOT")
+    parser.add_argument("--manifest-filename", metavar="FILENAME", default=default_manifest_filename, type=Path, help="load manifest from FILENAME (relative to the ROOT)")
+    parser.add_argument("-M", "--manifest", metavar="PATH", default=env("MANIFEST"), type=Path, help="load manifest from PATH")
 
     subparsers = parser.add_subparsers(dest="cmd")
 
+    def add_timeout_arg(p):
+        p.add_argument("-T", "--timeout", type=float)
+
     add_cmd = subparsers.add_parser("add")
+    add_cmd.add_argument("-r", "--recursive", action="store_true", help="recurse into the fetched manifest")
+    add_cmd.add_argument("-m", "--mkdir", action="store_true", help="mkdir necessary directories")
     add_cmd.add_argument("--sha256", metavar="SHA256")
     add_cmd.add_argument("url", metavar="URL")
     add_cmd.add_argument("target", metavar="TARGET", nargs="?")
+    add_timeout_arg(add_cmd)
 
     verify_cmd = subparsers.add_parser("verify")
     verify_cmd.add_argument("target", metavar="TARGET", nargs="*")
+    add_timeout_arg(verify_cmd)
 
     download_cmd = subparsers.add_parser("download")
+    download_cmd.add_argument("-m", "--mkdir", action="store_true", help="mkdir necessary directories")
     download_cmd.add_argument("-u", "--update", action="store_true", help="redownload and update the manifest")
     download_cmd.add_argument("target", metavar="TARGET", nargs="*")
+    add_timeout_arg(download_cmd)
 
     steal_this_script_cmd = subparsers.add_parser("steal-this-script")
     steal_this_script_cmd.add_argument("output", metavar="OUTPUT", nargs="?")
 
     subparsers.add_parser("ls")
+
+    walk_cmd = subparsers.add_parser("walk")
+    walk_cmd.add_argument("args", nargs="*")
 
     return parser.parse_args()
 
@@ -95,18 +110,20 @@ def setup_logger(level):
 
     return l
 
-def download(url, target=None):
+def download(url, target=None, timeout: float | None = None):
     m = hashlib.sha256()
     if target is None:
         logger.info("fetching: %s", url)
     else:
         logger.info("fetching: %s -> %s", url, target.name)
 
-    hdr = {
-        "User-Agent": env("USER_AGENT", whoami),
-    }
-    req = urllib.request.Request(url, headers=hdr)
-    with urllib.request.urlopen(req) as f:
+    ua = env("USER_AGENT", whoami)
+    assert ua is not None
+    req = urllib.request.Request(url, headers={
+        "User-Agent": ua,
+    })
+
+    with urllib.request.urlopen(req, timeout=timeout) as f:
         while True:
             bs = f.read(4096)
             if len(bs) == 0:
@@ -129,42 +146,175 @@ def sha256_file(path):
             m.update(bs)
     return m.hexdigest()
 
-class Manifest:
-    def __init__(self, path):
-        self.path = path
+@dataclass
+class ChecksumMismatch(Exception):
+    a: tuple[os.PathLike | str, str]
+    b: tuple[os.PathLike | str, str]
+    alg: str = "SHA256"
 
-        self._items = {}
-        if os.path.exists(self.path):
-            logger.debug("loading manifest: %s", self.path)
-            with open(self.path, "r", encoding="UTF-8") as f:
-                for i in map(lambda d: Item.from_dict(d, manifest=self), json.load(f)):
-                    self._items[i.target] = i
-        else:
-            logger.debug("empty manifest intended for: %s", self.path)
+    def __str__(self):
+        return repr(self)
+
+Digest = str
+
+@dataclass
+class Item:
+    url: str
+    target: str
+    timestamp: datetime.datetime
+    sha256: Digest
+    recurse: bool | None = None
+    local: os.PathLike | None = None
 
     def __repr__(self):
-        return f"Manifest({self.path})"
+        return f"Item({self.target}, {self.sha256})"
 
-    def __contains__(self, item):
-        if isinstance(item, Item):
-            item = item.target
-        return item in self._items
+    def path(self, root: Path | None = None) -> Path:
+        if isinstance(root, str):
+            root = Path(root)
+            # TODO: raise ValueError() and fix
+        return (root or Path.cwd()) / self.target
 
-    def __getitem__(self, item):
-        if isinstance(item, Item):
-            item = item.target
-        return self._items[item]
+    def exists(self, root=None):
+        return os.path.exists(self.path(root))
 
-    def items(self):
-        yield from self._items.values()
+    def download(self,
+        root: Path | None = None,
+        update: bool | None = None,
+        timeout: float | None = None,
+        mkdir: bool | None = None,
+    ) -> Path:
+        path = self.path(root)
+        if update:
+            self.timestamp = datetime.datetime.now().astimezone()
+        os.makedirs(path.parent, exist_ok=True)
+        self.local = path
 
-    def add(self, item):
-        if item.target in self._items:
-            raise NotImplementedError()
-        self._items[item.target] = item
+        tmp = path.parent / f"{path.name}.{whoami}.{fresh_salt()}"
+        try:
+            with open(tmp, "xb") as f:
+                fetched = download(self.url, f, timeout=timeout)
+
+            if not update:
+                if self.sha256 is not None and fetched != self.sha256:
+                    raise ChecksumMismatch(a=(self.url, fetched), b=(f"{self}.sha256", self.sha256))
+
+                if os.path.exists(path):
+                    local = sha256_file(path)
+                    if local != self.sha256:
+                        raise ChecksumMismatch(a=(path, local), b=(f"{self}.sha256", self.sha256))
+
+            self.sha256 = fetched
+            if mkdir is True:
+                path.parent.mkdir(parents=True, exist_ok=True)
+            os.rename(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+
+        return self.local
+
+    @classmethod
+    def new(cls,
+        url: str,
+        target: str,
+        sha256: Digest | None,
+        recurse: bool | None = None,
+        **kwargs,
+    ) -> tuple[Self, Path]:
+        item = cls(
+            url = url,
+            target = target,
+            timestamp = datetime.datetime.now().astimezone(),
+            sha256 = sha256, # type: ignore
+            recurse = recurse,
+        )
+        return item, item.download(**kwargs)
+
+    def verify(self, root: Path | None = None, url=None, sha256=None) -> Path:
+        if url is not None and self.url != url:
+            raise RuntimeError("url doesn't match manifest", url, self.url)
+
+        if sha256 is not None and self.sha256 != sha256:
+            raise RuntimeError("sha256 doesn't match manifest", sha256, self.sha256)
+
+        path = self.path(root)
+        logger.info("verifying: %s", path)
+        local = sha256_file(path)
+        if local != self.sha256:
+            raise ChecksumMismatch(a=(path, local), b=(f"{self}.sha256", self.sha256))
+        self.local = path
+        return self.local
 
     def to_dict(self):
-        items = sorted(self._items.values(), key=lambda i: i.target)
+        assert self.timestamp is not None
+        d: dict[str, Any] = {
+            "target": self.target,
+            "url": self.url,
+            "sha256": self.sha256,
+            "timestamp": self.timestamp.isoformat(timespec="seconds"),
+        }
+
+        if self.recurse is True:
+            d["recurse"] = True
+
+        return d
+
+    @classmethod
+    def from_dict(cls, d) -> Self:
+        return cls(
+            target = d["target"],
+            url = d["url"],
+            sha256 = d["sha256"],
+            timestamp = datetime.datetime.fromisoformat(d["timestamp"]),
+            recurse = d.get("recurse"),
+        )
+
+@dataclass
+class Manifest:
+    path: Path
+    items: dict[str, Item]
+
+    @classmethod
+    def load(cls, path):
+        logger.debug("loading manifest: %s", path)
+
+        with open(path, "rb") as f:
+            js = json.load(f)
+
+        items = {}
+        for j in js:
+            i = Item.from_dict(j)
+            items[i.target] = i
+
+        return cls(path, items)
+
+    def __contains__(self, item) -> bool:
+        if isinstance(item, Item):
+            item = item.target
+        return item in self.items
+
+    def __getitem__(self, key) -> Item:
+        if isinstance(key, Item):
+            key = key.target
+        return self.items[key]
+
+    def get(self, key) -> Item | None:
+        try:
+            return self[key]
+        except KeyError:
+            return None
+
+    def __iter__(self):
+        yield from self.items.values()
+
+    def add(self, item):
+        if item.target in self.items:
+            raise NotImplementedError()
+        self.items[item.target] = item
+
+    def to_dict(self):
+        items = sorted(self, key=lambda i: i.target)
         items = map(lambda i: i.to_dict(), items)
         return list(items)
 
@@ -174,113 +324,31 @@ class Manifest:
             json.dump(self.to_dict(), f, sort_keys=True, indent=4)
             f.write("\n")
 
-@dataclass
-class ChecksumMismatch(Exception):
-    a: Tuple[os.PathLike | str, str]
-    b: Tuple[os.PathLike | str, str]
-    alg: str = "SHA256"
-
-    def __str__(self):
-        return repr(self)
-
-class Item:
-    def __init__(self, url, target, manifest, sha256=None, timestamp=None): # pylint: disable=design
-        self.url = url
-        self.target = target
-        self.manifest = manifest
-        self.sha256 = sha256
-        self.timestamp = timestamp
-        self.local = None
-
-    def __repr__(self):
-        return f"Item({self.target}, {self.manifest})"
-
-    def path(self, root=None):
-        return os.path.join(root or os.getcwd(), self.target)
-
-    def exists(self, root=None):
-        return os.path.exists(self.path(root))
-
-    def download(self, root=None, update=None) -> Self:
-        path = self.path(root)
-        if update:
-            self.timestamp = datetime.datetime.now().astimezone()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        self.local = path
-
-        tmp = path + f".{whoami}.{fresh_salt()}"
-        try:
-            with open(tmp, "xb") as f:
-                fetched = download(self.url, f)
-
-            if self.sha256 is not None and not update:
-                if fetched != self.sha256:
-                    raise ChecksumMismatch(a=(self.url, fetched), b=(f"{self}.sha256", self.sha256))
-
-                if os.path.exists(path):
-                    local = sha256_file(path)
-                    if local != self.sha256:
-                        raise ChecksumMismatch(a=(path, local), b=(f"{self}.sha256", self.sha256))
-
-            self.sha256 = fetched
-            os.rename(tmp, path)
-        finally:
-            if os.path.exists(tmp):
-                os.remove(tmp)
-
-        return self
-
-    def verify(self, root=None, url=None, sha256=None):
-        if url is not None and self.url != url:
-            raise RuntimeError("url doesn't match manifest", url, self.url)
-
-        if sha256 is not None and self.sha256 != sha256:
-            raise RuntimeError("sha256 doesn't match manifest", sha256, self.sha256)
-
-        path = self.path(root)
-        logger.debug("verifying: %s", path)
-        local = sha256_file(path)
-        if local != self.sha256:
-            raise ChecksumMismatch(a=(path, local), b=(f"{self}.sha256", self.sha256))
-        self.local = path
-        return self
-
-    def to_dict(self):
-        assert self.timestamp is not None
-        d = {
-            "target": self.target,
-            "url": self.url,
-            "sha256": self.sha256,
-            "timestamp": self.timestamp.isoformat(timespec="seconds"),
-        }
-
-        return d
-
-    @staticmethod
-    def from_dict(d, manifest=None):
-        return Item(
-            target = d["target"],
-            url = d["url"],
-            sha256 = d["sha256"],
-            timestamp = datetime.datetime.fromisoformat(d["timestamp"]),
-            manifest = manifest,
-        )
-
-def resolve_root_and_manifest(args):
+def resolve_root_and_manifest(args: argparse.Namespace, add=False) -> tuple[Path, Manifest]:
     root = args.root
     if root == ".":
-        root = os.getcwd()
+        root = Path.cwd()
     logger.debug("root: %s", root)
 
-    manifest_path = args.manifest
+    path = args.manifest
     if args.manifest is None:
-        manifest_path = os.path.join(root, args.manifest_filename)
+        path = root / args.manifest_filename
 
-    manifest = Manifest(manifest_path)
-    return root, manifest
+    if add and not path.exists():
+        return root, Manifest(path, {})
+
+    return root, Manifest.load(path)
+
+def choose_items(args: argparse.Namespace, manifest: Manifest) -> Generator[Item, None, None]:
+    if vars(args).get("target"):
+        for i in manifest:
+            if i.target in args.target:
+                yield i
+    else:
+        yield from manifest
 
 def do_add(args):
-    root, manifest = resolve_root_and_manifest(args)
+    root, manifest = resolve_root_and_manifest(args, add=True)
 
     target = args.target
     if target is None:
@@ -288,56 +356,41 @@ def do_add(args):
 
     target = os.path.relpath(os.path.join(root, target), start=root)
 
-    if target in manifest:
-        item = manifest[target]
+    item = manifest.get(target)
+    if item is not None:
         if not item.exists(root=root):
-            item = item.download(root=root)
-        item = item.verify(url=args.url, sha256=args.sha256, root=root)
+            item.download(root=root, timeout=args.timeout, mkdir=args.mkdir)
+        path = item.verify(url=args.url, sha256=args.sha256, root=root)
     else:
-        item = Item(url=args.url, sha256=args.sha256, target=target, manifest=manifest, timestamp=datetime.datetime.now().astimezone())
-        item.download(root=root)
+        item, path = Item.new(url=args.url, target=target, sha256=args.sha256, recurse=args.recursive, timeout=args.timeout, root=root, mkdir=args.mkdir)
         manifest.add(item)
 
-    assert item.local is not None
     if not args.quiet:
-        print(os.path.relpath(item.local, start=root))
+        print(os.path.relpath(path, start=root))
 
     manifest.save()
 
 def do_download(args):
-    root, manifest = resolve_root_and_manifest(args)
+    def go(root: Path, m: Manifest):
+        for i in choose_items(args, m):
+            path = i.download(root=root, update=args.update, timeout=args.timeout, mkdir=args.mkdir)
 
-    items = set()
-    if vars(args).get("target"):
-        for i in manifest.items():
-            if i.target in args.target:
-                items.add(i)
-    else:
-        items = manifest.items()
+            if not args.quiet:
+                print(os.path.relpath(path, start=root))
 
-    for i in items:
-        i.download(root=root, update=args.update)
-        if not args.quiet:
-            print(os.path.relpath(i.local, start=root))
-
-    if args.update:
-        manifest.save()
+            if i.recurse:
+                go(root, Manifest.load(path))
+        if args.update:
+            m.save()
+    go(*resolve_root_and_manifest(args))
 
 def do_verify(args):
     root, manifest = resolve_root_and_manifest(args)
 
-    items = set()
-    if vars(args).get("target"):
-        for i in manifest.items():
-            if i.target in args.target:
-                items.add(i)
-    else:
-        items = manifest.items()
-
-    for i in items:
-        i.verify(root=root)
+    for i in choose_items(args, manifest):
+        path = i.verify(root=root)
         if not args.quiet:
-            print(os.path.relpath(i.local, start=root))
+            print(os.path.relpath(path, start=root))
 
 def do_steal_this_script(args):
     if args.output is None:
@@ -368,11 +421,58 @@ def do_steal_this_script(args):
 def do_list(args):
     root, manifest = resolve_root_and_manifest(args)
 
-    for i in manifest.items():
+    for i in manifest:
         print(os.path.relpath(i.path(), start=root))
+
+def walk(fn: str = whoami) -> Path | None:
+    git = shutil.which("git")
+
+    ps = [ Path.cwd() ]
+
+    while ps:
+        p = ps.pop()
+        logger.debug("walking: %s", p)
+
+        for f in [p / fn, p / "tools" / fn]:
+            logger.debug("testing: %s", f)
+            if f.is_file(follow_symlinks=True) and os.access(f, os.X_OK, follow_symlinks=True):
+                return f
+
+        if git is not None:
+            try:
+                [r] = subprocess.check_output([git, "-C", p, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).splitlines()
+                r = Path(r)
+                if r != p:
+                    ps.append(r)
+                    continue
+            except subprocess.CalledProcessError:
+                pass
+
+        r = p.parent
+        if r != p:
+            ps.append(r)
+
+    p = shutil.which(fn)
+    if p is not None:
+        return Path(p)
+    return None
+
+def do_walk(args):
+    p = walk()
+    if p is None:
+        logger.error("unable to find a fetch executable")
+        sys.exit(1)
+
+    if args == []:
+        print(p)
+    else:
+        cmdline = [ p ] + args.args
+        logger.debug("running: %s", cmdline)
+        subprocess.check_call(cmdline)
 
 def main():
     args = parse_args()
+    global logger # pylint: disable=global-statement
     logger = setup_logger(args.log.upper())
     logger.debug("args: %s", args)
 
@@ -386,6 +486,8 @@ def main():
         do_steal_this_script(args)
     elif args.cmd == "ls":
         do_list(args)
+    elif args.cmd == "walk":
+        do_walk(args)
     else:
         raise RuntimeError(f"unexpected command: {args.cmd}")
 

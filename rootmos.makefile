@@ -42,10 +42,16 @@ $(AUX)/%.wc: %
 $(AUX)/%.build-info.lua: %
 	$(TOOLS)/build-info -l -o $@
 
+.PHONY: binder
+binder: $(patsubst %.bib.json,$(AUX)/binder/%/files,$(wildcard *.bib.json))
+.PRECIOUS: $(AUX)/binder/%/files
+$(AUX)/binder/%/files: %.bib.json
+	$(TOOLS)/stdout -o $@ -- $(TOOLS)/fetch --manifest=$< --root=$(dir $@) download
+
 $(AUX):
 	@mkdir -p $@
 
-prepare: deps $(LATEXMKRC) $(AUX)
+prepare: binder deps $(LATEXMKRC) $(AUX)
 
 $(LATEXMKRC):
 	$(MAKEFILE_DIR)/latexmkrc.sh $(LATEXMKRC)
