@@ -16,6 +16,7 @@ local M = {
 
 local def = require("rootmos-utils").def
 local luaaux = require("rootmos-utils").luaaux
+local sha256 = require("rootmos-utils").sha256
 
 local lparse = require("lparse")
 
@@ -31,21 +32,31 @@ function M.setup_jobtype()
     def("jobtype", function() return tex.print(M.jobtype) end)
 end
 
+local seen_bibresources = {}
+
+function M.addbibresource(p)
+    if not p:find("%.bib$") then
+        --texio.write_nl(string.format("ignoring non-bib file: %s\n", e))
+        return
+    end
+    local h = sha256(p)
+
+    if seen_bibresources[h] then
+        texio.write_nl(string.format("skipping duplicate bib resource: %s [%s]\n", p, h:sub(1,7)))
+        return
+    end
+    seen_bibresources[h] = p
+
+    texio.write_nl(string.format("adding bib resource: %s [%s]\n", p, h:sub(1,7)))
+    tex.print("\\addbibresource{" .. p .. "}")
+end
+
 function M.setup_addbibresources()
     def("addbibresources", function()
-        function add(p)
-            if p:find("%.bib$") then
-                texio.write_nl(string.format("adding bib resource: %s\n", p))
-                tex.print("\\addbibresource{" .. p .. "}")
-            else
-                --texio.write_nl(string.format("ignoring non-bib file: %s\n", e))
-            end
-        end
-
         local path = lparse.scan("o") or lfs.currentdir()
         texio.write_nl(string.format("scanning for local .bib files: %s\n", path))
         for e in lfs.dir(path) do
-            add(path .. "/" .. e)
+            M.addbibresource(path .. "/" .. e)
         end
 
         local binder = os.getenv("BINDER")
@@ -58,7 +69,7 @@ function M.setup_addbibresources()
                     if lfs.attributes(b, "mode") then
                         texio.write_nl(string.format("binder manifest: %s\n", b))
                         for _, fn in ipairs(dofile(b)) do
-                            add(r .. fn)
+                            M.addbibresource(r .. fn)
                         end
                     end
                 end

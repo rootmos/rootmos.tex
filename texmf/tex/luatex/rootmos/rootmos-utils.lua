@@ -14,4 +14,18 @@ function M.luaaux(path, suffix)
     return dofile(kpse.find_file(path, true))
 end
 
+function M.to_hex(str)
+  return (str:gsub('.', function (c)
+      return string.format('%02x', string.byte(c))
+  end))
+end
+
+function M.sha256(p)
+    local f = io.open(p)
+    local bs = f:read("*a")
+    local h = sha2.digest256(bs)
+    f:close()
+    return M.to_hex(h)
+end
+
 return M
