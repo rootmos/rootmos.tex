@@ -60,7 +60,7 @@ function M.setup_addbibresources()
         end
 
         local binder = os.getenv("BINDER")
-        if binder ~= nil then
+        if binder ~= nil and lfs.attributes(binder, "mode") then
             texio.write_nl(string.format("binder directory: %s\n", binder))
             for e in lfs.dir(binder) do
                 if e ~= "." and e ~= ".." then
