@@ -1,15 +1,19 @@
 #!/bin/bash
 # stdout
-# https://git.sr.ht/~rootmos/scripts dc7975c85a0e97c00f52c1f380729d9e7fad095f
-# 2026-09-25T17:46:39+02:00 SHA-256:80204f6d23f7f6f15ef135a8e62be65364910e7558ee372f213450479f70e519
+# https://git.sr.ht/~rootmos/scripts 491863a73bf7e1f226339e652ac9ac95f1f96041
+# 2026-09-28T06:03:37+02:00 SHA-256:b690364b6885ca7aae3b7a996335450da4ec7d3151560a2b4b141c02cdabeff2
 # sed "2,5d" | sha256sum | cut -f1 -d" "
 
 set -o nounset -o pipefail -o errexit
 
 OUTPUT=/dev/stdout
-while getopts "o:-" OPT; do
+FORMAT=
+while getopts "o:f:lL-" OPT; do
     case $OPT in
         o) OUTPUT=$OPTARG ;;
+        f) FORMAT=$OPTARG ;;
+        l) FORMAT=lua ;;
+        L) FORMAT=lua_lines ;;
         -) break ;;
         ?) exit 2 ;;
     esac
@@ -28,4 +32,37 @@ if [[ $EC -ne 0 ]]; then
     exit "$EC"
 fi
 
-cp "$TMP/stdout" "$OUTPUT"
+if [[ -z $FORMAT ]]; then
+    cp "$TMP/stdout" "$OUTPUT"
+fi
+
+fmt_lua() {
+    printf 'return "'
+    python - "$TMP/stdout" <<'EOF'
+import sys
+with open(sys.argv[1], "rb") as f:
+    bs = f.read()
+for b in bs:
+    sys.stdout.write(f"\\{b}")
+EOF
+    printf '"\n'
+}
+
+fmt_lua_lines() {
+    printf 'return {'
+    python - "$TMP/stdout" <<'EOF'
+import sys
+with open(sys.argv[1], "rb") as f:
+    bs = f.read()
+if bs and bs[-1] == 10:
+    bs = bs[:-1]
+for l in bs.split(b'\n'):
+    sys.stdout.write('"')
+    for b in l:
+        sys.stdout.write(f"\\{b}")
+    sys.stdout.write('",')
+EOF
+    printf '}\n'
+}
+
+fmt_"$FORMAT" >"$OUTPUT"

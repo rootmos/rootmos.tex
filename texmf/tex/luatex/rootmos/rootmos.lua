@@ -33,14 +33,35 @@ end
 
 function M.setup_addbibresources()
     def("addbibresources", function()
-        local path = lparse.scan("o") or lfs.currentdir()
-        texio.write_nl(string.format("scanning for .bib files: %s\n", path))
-        for e in lfs.dir(path) do
-            if e:find("%.bib$") then
-                texio.write_nl(string.format("adding bib resource: %s/%s\n", path, e))
-                tex.print("\\addbibresource{" .. e .. "}")
+        function add(p)
+            if p:find("%.bib$") then
+                texio.write_nl(string.format("adding bib resource: %s\n", p))
+                tex.print("\\addbibresource{" .. p .. "}")
             else
                 --texio.write_nl(string.format("ignoring non-bib file: %s\n", e))
+            end
+        end
+
+        local path = lparse.scan("o") or lfs.currentdir()
+        texio.write_nl(string.format("scanning for local .bib files: %s\n", path))
+        for e in lfs.dir(path) do
+            add(path .. "/" .. e)
+        end
+
+        local binder = os.getenv("BINDER")
+        if binder ~= nil then
+            texio.write_nl(string.format("binder directory: %s\n", binder))
+            for e in lfs.dir(binder) do
+                if e ~= "." and e ~= ".." then
+                    local r = binder .. "/" .. e .. "/"
+                    local b = r .. "binder.lua"
+                    if lfs.attributes(b, "mode") then
+                        texio.write_nl(string.format("binder manifest: %s\n", b))
+                        for _, fn in ipairs(dofile(b)) do
+                            add(r .. fn)
+                        end
+                    end
+                end
             end
         end
     end)

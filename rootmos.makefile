@@ -42,11 +42,12 @@ $(AUX)/%.wc: %
 $(AUX)/%.build-info.lua: %
 	$(TOOLS)/build-info -l -o $@
 
+export BINDER ?= $(AUX)/binder
 .PHONY: binder
-binder: $(patsubst %.bib.json,$(AUX)/binder/%/files,$(wildcard *.bib.json))
-.PRECIOUS: $(AUX)/binder/%/files
-$(AUX)/binder/%/files: %.bib.json
-	$(TOOLS)/stdout -o $@ -- $(TOOLS)/fetch --manifest=$< --root=$(dir $@) download
+binder: $(patsubst %.bib.json,$(BINDER)/%/binder.lua,$(wildcard *.bib.json))
+.PRECIOUS: $(BINDER)/%/binder.lua
+$(BINDER)/%/binder.lua: %.bib.json
+	$(TOOLS)/stdout -Lo $@ -- $(TOOLS)/fetch --manifest=$< --root=$(dir $@) download
 
 $(AUX):
 	@mkdir -p $@
