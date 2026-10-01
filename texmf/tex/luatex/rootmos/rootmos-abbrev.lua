@@ -29,10 +29,12 @@ M.styles.swedish = {
     ang = "ang.",
 
     iaf = { "i", "alla", "fall" },
+    iom = { "i", "och", "med" },
 }
 
 M.styles.informal = {
     iaf = "iaf",
+    iom = "iom",
     jfm = "jfm",
 }
 
