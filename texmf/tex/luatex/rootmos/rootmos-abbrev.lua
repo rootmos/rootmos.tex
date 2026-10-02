@@ -76,6 +76,7 @@ local function apply(s)
     for k, v in pairs(s) do
         local w = abbrev(v)
         def(k, function() tex.print(w) end)
+        -- TODO also capitalized versions: \Etc, \Eg?
     end
 end
 

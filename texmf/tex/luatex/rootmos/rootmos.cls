@@ -58,6 +58,10 @@
   \toggletrue{@mdu}
 }
 
+\DeclareOption{notoc}{%
+  \togglefalse{@toc}
+}
+
 \newtoggle{@notme}
 \DeclareOption{notme}{%
   \toggletrue{@notme}
