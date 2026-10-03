@@ -6,6 +6,9 @@ M.styles.english = {
     eg = "e.g.",
     ie = "i.e.",
     etc = "etc.",
+
+    w = "with",
+    wo = "without",
 }
 
 M.styles.fancy = {
@@ -36,6 +39,9 @@ M.styles.informal = {
     iaf = "iaf",
     iom = "iom",
     jfm = "jfm",
+
+    w = "w/",
+    wo = "w/o",
 }
 
 local def = require("rootmos-utils").def
