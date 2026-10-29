@@ -227,11 +227,10 @@
 }
 
 \iftoggle{@apa}{
-  \ifdraft{
-    \abstract{\,}
-  }
+  \ifdraft{\abstract{\,}}{}
+  \ifundef{\@shorttitle}{\shorttitle{\@FigureOutShortTitle{\@title}}}{}
 }{
-  \newcommand{\shorttitle}[1]{}
+  \NewDocumentCommand{\shorttitle}{m}{}
 }
 
 \iftoggle{@mdu}{

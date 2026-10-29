@@ -1,9 +1,11 @@
 set -o nounset -o pipefail -o errexit
 
 go() {
-    #tests/run go.lua
-    #make -C tests
-    #(cd template; make aux/sandbox.tex.wc && aux/sandbox.tex.wc)
+    #lua go.lua
+    template
+}
+
+template() {
     (
         cd template
 

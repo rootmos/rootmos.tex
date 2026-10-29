@@ -125,9 +125,24 @@ function M.wordcount(path, cfg)
     return s
 end
 
+function M.setup_title_utils()
+    def("@FigureOutShortTitle", function()
+        local t = lparse.scan("m")
+        local i = t:find(":")
+        if i == nil then
+            tex.print(t)
+            return
+        end
+        local st = t:sub(1,i-1)
+        local st = st:gsub("%s+$", "")
+        tex.print(st)
+    end)
+end
+
 function M.setup()
     M.setup_jobtype()
     M.setup_addbibresources()
+    M.setup_title_utils()
 end
 
 function M.print_meta()
