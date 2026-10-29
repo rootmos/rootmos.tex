@@ -12,7 +12,7 @@ go() {
 
         #make clean
         #make abbrev.draft.pdf QUICK=0
-        make sections.draft.pdf QUICK=0
+        make sections.draft.pdf sections.final.pdf QUICK=0
 
         #texhelp -e texcount sandbox.tex
         #../tools/words.sh skeleton.tex

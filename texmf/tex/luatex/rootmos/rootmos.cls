@@ -77,11 +77,32 @@
   \toggletrue{@informal}
 }
 
+\newtoggle{@noindentfirst}
+\DeclareOption{noindentfirst}{%
+  \toggletrue{@noindentfirst}
+}
+
 \ProcessOptions\relax
 
 \directlua{require("rootmos").setup()}
 
 \RequirePackage[\jobtype]{ifdraft}
+
+% the inverse of the indentfirst package: https://www.ctan.org/pkg/indentfirst
+\NewDocumentCommand{\@NoIndentFirst}{}{%
+  \let\@afterindenttrue\@afterindentfalse%
+  \@afterindentfalse%
+}
+
+\iftoggle{@apa}{%
+  \ifdraft{%
+    \@NoIndentFirst{}%
+  }{%
+    \iftoggle{@noindentfirst}{\@NoIndentFirst}{}%
+  }%
+}{%
+  \@NoIndentFirst{}%
+}
 
 \iftoggle{@mdu}{%
   \ifdraft{% draft
