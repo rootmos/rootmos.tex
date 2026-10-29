@@ -3,7 +3,7 @@ export ROOT ?= $(CURRENT_DIR)
 AUX ?= $(ROOT)/aux
 OUTDIR ?= $(ROOT)
 
-DEPS = $(ROOT)/tl.deps
+DEPS ?= $(ROOT)/tl.deps
 
 TEXHELP_URL ?= https://raw.githubusercontent.com/rootmos/texhelp/refs/heads/master/texhelp
 export TEXHELP_DOTDIR ?= $(ROOT)/.texhelp
@@ -63,17 +63,17 @@ reinit: deepclean init
 $(TEXHELP_DOTDIR):
 	wget -O- $(TEXHELP_URL) | bash -s -- -i
 
-DEPS_FLAG = $(dir $(DEPS)).$(notdir $(DEPS)).texhelp
+DEPS_FLAG = $(AUX)/$(notdir $(DEPS)).flag
 deps: init $(DEPS_FLAG)
-$(DEPS_FLAG): $(wildcard $(DEPS))
-	$(TEXHELP) -d $(MAKEFILE_DIR)/template/tl.deps
+$(DEPS_FLAG): $(wildcard $(DEPS)) $(MAKEFILE_DIR)/tl.deps $(AUX)
+	$(TEXHELP) -d $^
 	@touch $@
 
 update: init
 	$(TEXHELP) -u
 
 clean:
-	rm -rf $(AUX) .*.texhelp
+	rm -rf $(AUX)
 ifneq ($(wildcard $(TEXHELP)),)
 	$(TEXHELP) -z
 endif
