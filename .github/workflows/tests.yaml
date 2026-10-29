@@ -48,7 +48,7 @@ jobs:
 
     - name: Initialize texhelp
       if: steps.cache-texhelp.outputs.cache-hit != 'true'
-      run: tools/retry -vz30s -- make -C template deepclean init TEXHELP_MIRROR=
+      run: tools/retry -vz30s -- make -C template deepclean init deps TEXHELP_MIRROR=
 
     - name: Save texhelp cache
       if: steps.cache-texhelp.outputs.cache-hit != 'true'

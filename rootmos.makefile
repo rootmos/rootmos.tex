@@ -65,7 +65,7 @@ $(TEXHELP_DOTDIR):
 
 DEPS_FLAG = $(AUX)/$(notdir $(DEPS)).flag
 deps: init $(DEPS_FLAG)
-$(DEPS_FLAG): $(wildcard $(DEPS)) $(MAKEFILE_DIR)/tl.deps $(AUX)
+$(DEPS_FLAG): $(wildcard $(DEPS)) $(MAKEFILE_DIR)/tl.deps | $(AUX)
 	$(TEXHELP) -d $^
 	@touch $@
 

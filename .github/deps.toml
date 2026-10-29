@@ -5,8 +5,8 @@ ubuntu = [ "make", "wget", "patch", "bash", "fping", "jq", "liblist-moreutils-pe
 
 [runtime]
 arch = [ "make", "git", "libxcrypt-compat" ]
-ubuntu = [ "make", "git", "ca-certificates" ]
-debian = [ "make", "git", "ca-certificates" ]
+ubuntu = [ "make", "git", "ca-certificates", "curl" ]
+debian = [ "make", "git", "ca-certificates", "curl" ]
 
 [tests]
 arch = [ "make" ]
