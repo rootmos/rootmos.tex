@@ -1,0 +1,33 @@
+\documentclass{rootmos}
+
+\reversemarginpar
+\usepackage{marginnote}
+
+\newcounter{TLP}
+\setcounter{TLP}{0}
+
+\AddToHook{para/begin}{%
+    \addtocounter{TLP}{1}%
+    \ifthenelse{\value{TLP}=1}{\marginnote{Foo?}}{}%
+}
+\AddToHook{para/after}{%
+    \addtocounter{TLP}{-1}%
+}
+
+\usepackage{kantlipsum}
+
+\title{TLP-style paragraph numbering}
+
+\begin{document}
+
+\section{A}
+\kant[1-2]
+
+\section{B}
+\kant[3]
+\begin{itemize}
+    \item \kant[4]
+    \item \kant[5]
+\end{itemize}
+
+\end{document}
