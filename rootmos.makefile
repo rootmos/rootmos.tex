@@ -5,9 +5,10 @@ OUTDIR ?= $(ROOT)
 
 DEPS ?= $(ROOT)/tl.deps
 
-TEXHELP_URL ?= https://raw.githubusercontent.com/rootmos/texhelp/refs/heads/master/texhelp
-export TEXHELP_DOTDIR ?= $(ROOT)/.texhelp
-export TEXHELP := $(TEXHELP_DOTDIR)/bin/texhelp
+find_documents = $(basename $(shell find $(1) -maxdepth 1 -type f -name "*.tex" -and -not -name "course.tex" -printf "%f\n"))
+ifeq ($(strip $(DOCUMENTS)),)
+DOCUMENTS = $(call find_documents, $(ROOT))
+endif
 
 draft: $(foreach doc, $(DOCUMENTS), $(doc).draft.pdf)
 final: $(foreach doc, $(DOCUMENTS), $(doc).final.pdf)
@@ -54,11 +55,15 @@ $(AUX):
 
 prepare: binder deps $(LATEXMKRC) $(AUX)
 
-$(LATEXMKRC):
-	$(MAKEFILE_DIR)/latexmkrc.sh $(LATEXMKRC)
+TEXHELP_URL ?= https://raw.githubusercontent.com/rootmos/texhelp/refs/heads/master/texhelp
+export TEXHELP_DOTDIR ?= $(ROOT)/.texhelp
+export TEXHELP := $(TEXHELP_DOTDIR)/bin/texhelp
 
 init: $(TEXHELP_DOTDIR)
 reinit: deepclean init
+
+$(LATEXMKRC):
+	$(MAKEFILE_DIR)/latexmkrc.sh $(LATEXMKRC)
 
 $(TEXHELP_DOTDIR):
 	wget -O- $(TEXHELP_URL) | bash -s -- -i
