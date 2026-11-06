@@ -268,7 +268,8 @@
     \iftoggle{@debugcite}{\nocite{*}}{}%
     \clearpage%
   }{}%
-  \printbibliography[notcategory=skeleton]%
+  \printbibliography[notcategory=skeleton,notkeyword=secondary]%
+  \printbibliography[keyword=secondary,title={\iftoggle{@swedish}{Indirekta referenser}{Secondary references}}]%
   \ifdraft{\printbibliography[category=skeleton,title={\iftoggle{@swedish}{Skelettreferenser}{Skeleton references}}]}{}%
   \ifdraft{\listoftodos}{}%
 }
