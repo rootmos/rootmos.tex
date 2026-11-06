@@ -1,5 +1,7 @@
 local M = {}
 
+local capitalize = require("rootmos-utils").capitalize
+
 M.styles = {}
 
 M.styles.english = {
@@ -29,16 +31,26 @@ M.styles.swedish = {
     dvs = "dvs.",
     osv = "osv.",
     etc = "etc.",
-    ang = "ang.",
+    ang = "angående",
 
     iaf = { "i", "alla", "fall" },
     iom = { "i", "och", "med" },
+    tom = { "till", "och", "med" },
+    mao = { "med", "andra", "ord" },
+}
+
+M.styles.formal = {
+    dvs = { "det", "vill", "säga" },
+    osv = { "och", "så", "vidare" },
 }
 
 M.styles.informal = {
     iaf = "iaf",
     iom = "iom",
+    tom = "tom",
     jfm = "jfm",
+    mao = "mao.",
+    ang = "ang.",
 
     w = "w/",
     wo = "w/o",
@@ -47,14 +59,17 @@ M.styles.informal = {
 local def = require("rootmos-utils").def
 local lparse = require("lparse")
 
-local function abbrev(m)
+local function abbrev(m, cap1)
     if type(m) == "string" then
         m = { m }
     end
 
     local s = ""
 
-    for _, w in ipairs(m) do
+    for i, w in ipairs(m) do
+        if cap1 and i == 1 then
+            w = capitalize(w)
+        end
         if w:sub(-1) == "." then
             s = s .. string.format([[\xperiodafter{\mbox{%s}}]], w:sub(1, -2))
         else
@@ -78,11 +93,16 @@ local function do_common_setup()
     did_common_setup = true
 end
 
+local function capitalize(str)
+    return (str:gsub("^%l", string.upper))
+end
+
 local function apply(s)
     for k, v in pairs(s) do
         local w = abbrev(v)
         def(k, function() tex.print(w) end)
-        -- TODO also capitalized versions: \Etc, \Eg?
+        local W = abbrev(v, true)
+        def(capitalize(k), function() tex.print(W) end)
     end
 end
 

@@ -73,6 +73,9 @@
 }
 
 \newtoggle{@informal}
+\DeclareOption{formal}{%
+  \togglefalse{@informal}
+}
 \DeclareOption{informal}{%
   \toggletrue{@informal}
 }

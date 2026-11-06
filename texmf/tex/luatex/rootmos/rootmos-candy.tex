@@ -25,7 +25,10 @@
 
 \iftoggle{@informal}{%
     \directlua{require("rootmos-abbrev").setup{"informal"}}%
-}{}
+}{%
+    \directlua{require("rootmos-abbrev").setup{"formal"}}%
+}
+
 
 % https://tex.stackexchange.com/a/313337
 \newlist{todolist}{itemize}{2}

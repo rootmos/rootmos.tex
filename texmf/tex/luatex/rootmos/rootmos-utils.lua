@@ -28,4 +28,9 @@ function M.sha256(p)
     return M.to_hex(h)
 end
 
+-- http://lua-users.org/wiki/StringRecipes
+function M.capitalize(str)
+    return (str:gsub("^%l", string.upper))
+end
+
 return M
