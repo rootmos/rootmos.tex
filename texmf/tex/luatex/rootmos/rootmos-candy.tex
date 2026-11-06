@@ -26,3 +26,12 @@
 \iftoggle{@informal}{%
     \directlua{require("rootmos-abbrev").setup{"informal"}}%
 }{}
+
+% https://tex.stackexchange.com/a/313337
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
