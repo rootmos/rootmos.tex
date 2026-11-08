@@ -16,6 +16,7 @@ template() {
 
         #make clean
         make abbrev.draft.pdf
+        make apa.draft.pdf
         #make sections.draft.pdf sections.final.pdf
         #make tlp.draft.pdf
 

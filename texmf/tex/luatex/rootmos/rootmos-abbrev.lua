@@ -71,9 +71,9 @@ local function abbrev(m, cap1)
             w = capitalize(w)
         end
         if w:sub(-1) == "." then
-            s = s .. string.format([[\xperiodafter{\mbox{%s}}]], w:sub(1, -2))
+            s = s .. string.format([[\xperiodafter{%s}]], w:sub(1, -2))
         else
-            s = s .. string.format([[\mbox{%s}\xspace]], w)
+            s = s .. string.format([[%s\xspace ]], w)
         end
     end
 

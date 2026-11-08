@@ -25,6 +25,11 @@
     }%
 }
 
+\NewDocumentCommand{\tcs}{o o m}{%
+    \posscitealias%
+    \tc[#1][#2]{#3}%
+}
+
 \NewDocumentCommand{\bq}{o o m +m}{%
     \blockcquote[#1][#2]{#3}{\ignorespaces#4\unskip}%
 }
@@ -57,7 +62,12 @@
     }%
 }
 
-\NewDocumentCommand{\bqin}{O{} o m O{} o m +m}{
+\NewDocumentCommand{\tcsin}{O{} o m O{} m}{%
+    \posscitealias%
+    \tcin[#1][#2]{#3}[#4]{#5}%
+}
+
+\NewDocumentCommand{\bqin}{O{} o m O{} o m +m}{%
     \blockquote{\ignorespaces#7\unskip%
         \addspace%
         \mkbibparens{%
@@ -76,7 +86,7 @@
     }
 }
 
-\NewDocumentCommand{\tqin}{O{} o m O{} o m m}{
+\NewDocumentCommand{\tqin}{O{} o m O{} o m m}{%
     \textquote{\ignorespaces#7\unskip}%
     \addspace%
     \mkbibparens{%
@@ -93,3 +103,31 @@
         }%
     }%
 }
+
+\NewDocumentCommand{\@poss}{}{%
+    \iftoggle{@swedish}{s}{'s}%
+}
+
+% https://tex.stackexchange.com/a/307461
+\DeclareNameFormat{labelname:poss}{% Based on labelname from biblatex.def
+  \nameparts{#1}% Not needed if using Biblatex 3.4
+  \ifcase\value{uniquename}%
+    \usebibmacro{name:family}{\namepartfamily}{\namepartgiven}{\namepartprefix}{\namepartsuffix}%
+  \or
+    \ifuseprefix
+      {\usebibmacro{name:first-last}{\namepartfamily}{\namepartgiveni}{\namepartprefix}{\namepartsuffixi}}
+      {\usebibmacro{name:first-last}{\namepartfamily}{\namepartgiveni}{\namepartprefixi}{\namepartsuffixi}}%
+  \or
+    \usebibmacro{name:first-last}{\namepartfamily}{\namepartgiven}{\namepartprefix}{\namepartsuffix}%
+  \fi
+  \usebibmacro{name:andothers}%
+  \ifnumequal{\value{listcount}}{\value{liststop}}{\@poss}{}}
+\DeclareFieldFormat{shorthand:poss}{\ifnameundef{labelname}{#1\@poss}{#1}}
+\DeclareFieldFormat{citetitle:poss}{\mkbibemph{#1}\@poss}
+\DeclareFieldFormat{label:poss}{#1\@poss}
+\newrobustcmd*{\posscitealias}{%
+  \AtNextCite{%
+    \DeclareNameAlias{labelname}{labelname:poss}%
+    \DeclareFieldAlias{shorthand}{shorthand:poss}%
+    \DeclareFieldAlias{citetitle}{citetitle:poss}%
+    \DeclareFieldAlias{label}{label:poss}}}
