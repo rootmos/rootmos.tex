@@ -2,87 +2,50 @@
 
 set -o nounset -o pipefail -o errexit
 
-make-var() {
-    VAR=$1
-    shift
-    local salt
-    salt=$(tr -cd '[:alnum:]' </dev/urandom 2>/dev/null | head -c5 || true)
-    read -r -d '' expr <<EOF
-.PHONY: echo-$salt
-echo-$salt:
-	@[ \$(origin $VAR) '!=' undefined ]
-	@echo \$($VAR)
-EOF
-    make --no-print-directory "$@" --eval="$expr" "echo-$salt" 2>/dev/null
-}
-
-process-file() {
-    local f=$1 dir fn aux
-    local g="${f/%.tex/}"
-    if [[ $g = "$f" ]]; then
-        return
-    fi
-    dir=$(dirname "$g")
-    fn=$(basename "$g")
-    aux=$(make-var -C "$dir" AUX || echo .)
-
-    if [[ ! -d "$aux" ]]; then
-        return
-    fi
-
-    local values=()
-    local TODOs
-    TODOs=$(find "$aux" -maxdepth 1 -type f -name "$fn*.tdo" -exec stat --printf '%X %n\0' {} \; \
-        | sort -znr | head -zn1 | sed 's/^[0-9]\+ //' | xargs -0 wc -l | cut -f1 -d' ')
-    if [[ $TODOs -gt 0 ]]; then
-        values+=("$TODOs TODOs")
-    fi
-
-    local wc="$aux/$fn.tex.wc"
-    if [[ -f "$wc" ]]; then
-        wc=$(lua - "$wc" <<EOF
-local w = dofile(arg[1])
-print(string.format("%d (+%d=%d) words", w.text, w.other, w.text+w.other))
-EOF
-)
-        values+=("$wc")
-    fi
-
-    if [[ ${#values[@]} -gt 0 ]]; then
-        echo -n "$f: "
-        local i=0
-        for v in "${values[@]}"; do
-            if [[ $i -gt 0 ]]; then
-                echo -n ", "
-            fi
-            echo -n "$v"
-            i=$((i+1))
-        done
-        echo
-    fi
-}
+SCRIPT_DIR=$(readlink -f "$0" | xargs dirname)
+TOOLS=${TOOLS-$SCRIPT_DIR/../tools}
 
 COMMIT_MSG_FILE=$1
-COMMIT_SOURCE=${2-}
-if [ -n "$COMMIT_SOURCE" ]; then
-    exit 0
-fi
+COMMIT_SOURCE_REV=${3-HEAD}
 
 TMP=$(mktemp -d)
 trap 'rm -rf $TMP' EXIT
 
-ADD=$TMP/add
-mapfile -t FILEs < <(git diff --cached --name-only --diff-filter="AM")
-for f in "${FILEs[@]}"; do
-    process-file "$f" >>"$ADD"
+APPEND=$TMP/append
+
+mapfile -t ADDED < <(git diff-tree -r --name-only --no-commit-id --diff-filter="A" "$COMMIT_SOURCE_REV")
+for f in "${ADDED[@]}"; do
+    if [[ ${f/%.tex/} = "$f" ]]; then
+        continue
+    fi
+    AFTER=$("$TOOLS/words" -fstrict <"$f")
+    echo "$f: $AFTER words" >>"$APPEND"
 done
 
-if [[ ! -e $ADD ]]; then
+mapfile -t MODIFIED < <(git diff-tree -r --name-only --no-commit-id --diff-filter="M" "$COMMIT_SOURCE_REV")
+for f in "${MODIFIED[@]}"; do
+    if [[ ${f/%.tex/} = "$f" ]] || [[ ! -e $f ]]; then
+        continue
+    fi
+    BEFORE=$(git show "$COMMIT_SOURCE_REV:$f" | "$TOOLS/words" -fstrict)
+    AFTER=$("$TOOLS/words" -fstrict <"$f")
+    N=$((AFTER-BEFORE))
+    if [[ $N -gt 0 ]]; then
+        echo "$f: $AFTER (+$N) words" >>"$APPEND"
+    elif [[ $N -lt 0 ]]; then
+        echo "$f: $AFTER ($N) words" >>"$APPEND"
+    fi
+done
+
+if [[ ! -e $APPEND ]]; then
     exit 0
 fi
 
+OLD="$TMP/old"
+grep -vxE '[^:]+:[ 0-9+()]+words' "$COMMIT_MSG_FILE" >"$OLD"
+
 NEW="$TMP/new"
-python - "$COMMIT_MSG_FILE" "$ADD" <<'EOF' >"$NEW"
+python - "$OLD" "$APPEND" <<'EOF' >"$NEW"
 import sys
 with open(sys.argv[1]) as f:
     done = False
@@ -90,7 +53,6 @@ with open(sys.argv[1]) as f:
         l = l.rstrip()
         if not done and l.startswith("#"):
             with open(sys.argv[2]) as g:
-                print()
                 for k in g:
                     print(k.rstrip())
             done = True
