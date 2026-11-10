@@ -3,15 +3,17 @@
 set -o nounset -o pipefail -o errexit
 
 make-var() {
+    VAR=$1
+    shift
     local salt
     salt=$(tr -cd '[:alnum:]' </dev/urandom 2>/dev/null | head -c5 || true)
     read -r -d '' expr <<EOF
 .PHONY: echo-$salt
 echo-$salt:
-	@[ \$(origin $1) '!=' undefined ]
-	@echo \$($1)
+	@[ \$(origin $VAR) '!=' undefined ]
+	@echo \$($VAR)
 EOF
-    make -C "${2-.}" --no-print-directory --eval="$expr" "echo-$salt" 2>/dev/null
+    make --no-print-directory "$@" --eval="$expr" "echo-$salt" 2>/dev/null
 }
 
 process-file() {
@@ -22,7 +24,7 @@ process-file() {
     fi
     dir=$(dirname "$g")
     fn=$(basename "$g")
-    aux=$(make-var AUX "$dir" || echo .)
+    aux=$(make-var -C "$dir" AUX || echo .)
 
     if [[ ! -d "$aux" ]]; then
         return

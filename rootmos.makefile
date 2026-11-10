@@ -37,7 +37,7 @@ endif
 
 .PRECIOUS: $(AUX)/%.wc
 $(AUX)/%.wc: %
-	$(TOOLS)/words.sh -o $@ $<
+	$(TOOLS)/words -flua -o $@ $<
 
 .PRECIOUS: $(AUX)/%.build-info.lua
 $(AUX)/%.build-info.lua: %

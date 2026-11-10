@@ -15,12 +15,12 @@ template() {
         export QUICK=
 
         #make clean
-        make abbrev.draft.pdf
-        make apa.draft.pdf
+        #make abbrev.draft.pdf
+        #make apa.draft.pdf
         #make sections.draft.pdf sections.final.pdf
         #make tlp.draft.pdf
 
         #texhelp -e texcount sandbox.tex
-        #../tools/words.sh skeleton.tex
+        git show HEAD^:./apa.tex |  ../tools/words -fstrict
     )
 }
