@@ -19,42 +19,72 @@ M.styles.fancy = {
 
 -- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
 M.styles.swedish = {
-    bla = "bl.a.",
-    tex = "t.ex.",
-    pga = "p.g.a.",
-    ev = "ev.",
-    sk = "s.k.",
-
-    jfr = "jfr",
-    jfm = { "jfr", "m." },
-
-    dvs = "dvs.",
-    osv = "osv.",
-    etc = "etc.",
     ang = "angående",
-
+    bla = "bl.a.",
+    dvs = "dvs.",
+    etc = "etc.",
+    ev = "ev.",
     iaf = { "i", "alla", "fall" },
     iom = { "i", "och", "med" },
-    tom = { "till", "och", "med" },
+    jfm = { "jfr", "m." },
+    jfr = "jfr",
     mao = { "med", "andra", "ord" },
+    mm = "m.m.",
+    obs = "obs.",
+    osv = "osv.",
+    resp = "resp.",
+    pga = "p.g.a.",
+    sk = "s.k.",
+    tex = "t.ex.",
+    tom = { "t.", "o.", "m." },
 }
 
 M.styles.formal = {
+    bla = { "bland", "annat" },
     dvs = { "det", "vill", "säga" },
+    jfm = { "jämför", "med" },
+    jfr = { "jämför" },
+    obs = { "observera" },
     osv = { "och", "så", "vidare" },
+    resp = "respektive",
+    pga = { "på", "grund", "av" }
+    tex = { "till", "exempel" },
+    tex = { "till", "och", "med" },
 }
 
 M.styles.informal = {
+    ang = "ang.",
     iaf = "iaf",
     iom = "iom",
-    tom = "tom",
     jfm = "jfm",
-    mao = "mao.",
-    ang = "ang.",
+    mao = "mao",
+    tom = "tom",
 
     w = "w/",
     wo = "w/o",
 }
+
+local undefined = {}
+
+function M.insert(language, cmd, abbrev, formal, informal, fancy)
+end
+
+function M:language(key)
+    local l = self[key]
+    if l == nil then
+        l = {
+            insert = M.insert,
+        }
+        self[key] = l
+    end
+    return l
+end
+
+local swedish = M:language("swedish")
+swedish:insert("ang", "angående", nil, "ang.")
+swedish:insert("bla", undefined, "bl.a.")
+swedish:insert("iaf", "i alla fall", nil, "iaf")
+swedish:insert("tex", "till exempel", "t.ex.")
 
 local def = require("rootmos-utils").def
 local lparse = require("lparse")
