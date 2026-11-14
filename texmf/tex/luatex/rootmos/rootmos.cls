@@ -188,21 +188,24 @@
 % TODO biblatex urlstyle?
 \urlstyle{tt}
 
-\iftoggle{@mdu}{%
-  \ifdraft{% draft
-    \usepackage[style=american]{csquotes}
+\iftoggle{@mdu}{
+  \ifdraft{
+    \usepackage[style=american,strict=true,autopunct]{csquotes}
   }{
-    \usepackage[style=swedish]{csquotes}
+    \usepackage[style=swedish,strict=true,autopunct]{csquotes}
   }
 }{
-  \usepackage[style=american]{csquotes}
+  \usepackage[style=american,strict=true,autopunct]{csquotes}
 }
 \SetBlockThreshold{0}
 \SetCiteCommand{\pc}
 
-\NewDocumentCommand{\q}{m}{\enquote{\ignorespaces#1\unskip}}
-\NewDocumentCommand{\qo}{m}{\enquote{\ignorespaces#1\unskip}}
-\NewDocumentCommand{\qi}{m}{\enquote{\ignorespaces#1\unskip}}
+\DeclareAutoPunct{.,?!}
+\renewcommand{\mktextquote}[6]{#1#2#4#5#3#6}
+
+\NewDocumentCommand{\q}{m}{\textquote{\ignorespaces#1\unskip}}
+\NewDocumentCommand{\qo}{m}{\textquote{\ignorespaces#1\unskip}}
+\NewDocumentCommand{\qi}{m}{\textquote{\ignorespaces#1\unskip}}
 
 \usepackage{enumitem}
 \setlist{noitemsep,topsep=0.1\baselineskip}
@@ -249,13 +252,13 @@
   \directlua{require("rootmos").print_meta()}%
 }
 
-\ifdraft{%
-  \AtBeginDocument{\@meta}%
-}{%
-  \iftoggle{@mdu}{%
-    \note{\@meta}%
-  }{%
-    \AtBeginDocument{\@meta}%
+\ifdraft{
+  \AtBeginDocument{\@meta}
+}{
+  \iftoggle{@mdu}{
+    \note{\@meta}
+  }{
+    \AtBeginDocument{\@meta}
   }
 }
 
