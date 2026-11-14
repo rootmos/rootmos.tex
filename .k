@@ -19,7 +19,9 @@ template() {
         #make apa.draft.pdf
         #make sections.draft.pdf sections.final.pdf
         #make tlp.draft.pdf
-        make quote.draft.pdf
+        #make quote.draft.pdf
+        #make debug.draft.pdf
+        make a4.draft.pdf
 
         #texhelp -e texcount sandbox.tex
         #git show HEAD^:./apa.tex |  ../tools/words -fstrict
