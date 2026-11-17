@@ -1,14 +1,34 @@
-%\documentclass[apa]{rootmos}
-\documentclass{rootmos}
+\documentclass[apa]{rootmos}
+%\documentclass{rootmos}
+
+\title{Quotation playground}
 
 \begin{document}
 
-\q{foo.}
 
-\q{foo}.
+\section{\\q}
+\begin{itemize}
+    \item \q{foo.}
+    \item \q{foo}.
+    \item \q{foo?}
+    \item \q{foo}?
+\end{itemize}
 
-\q{foo?}
+\section{\\tq}
+\begin{itemize}
+    \item \tq{eo}{foo.}
+    \item \tq{eo}{foo}.
+    \item \tq{eo}{foo?}
+    \item \tq{eo}{foo}?
+\end{itemize}
 
-\q{foo}?
+% TODO
+\section{\\bq}
+\begin{itemize}
+    \item \bq{eo}{foo.}
+    \item \bq{eo}{foo}.
+    \item \bq{eo}{foo?}
+    \item \bq{eo}{foo}?
+\end{itemize}
 
 \end{document}

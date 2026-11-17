@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -o nounset -o errexit
+set -o xtrace
 
 SUDO=${SUDO-}
 DISTRO=${DISTRO-}
@@ -35,6 +36,30 @@ if [ -z "$DISTRO" ]; then
 fi
 echo "distro: $DISTRO" 1>&2
 
+if [ -n "$UPDATE" ]; then
+    echo 1>&2 "updating distro"
+    case "$DISTRO" in
+        arch)
+            set +o errexit
+            $SUDO pacman -Syu --noconfirm 1>&2
+            EC=$?
+            set -o errexit
+            if [ "$EC" -ne 0 ]; then
+                echo 1>&2 "update failed: attempting to update pacman and then retry"
+                $SUDO pacman -Sy 1>&2
+                $SUDO pacman -S pacman --noconfirm --needed 1>&2
+                $SUDO pacman -Su --noconfirm 1>&2
+            fi
+            ;;
+        alpine)
+            $SUDO apk update 1>&2
+            ;;
+        debian | ubuntu)
+            $SUDO apt-get update 1>&2
+            ;;
+    esac
+fi
+
 BOOTSTRAP=
 
 if ! command -v bash >/dev/null; then
@@ -55,23 +80,8 @@ if ! command -v git >/dev/null; then
     esac
 fi
 
-if [ -n "$UPDATE" ]; then
-    case "$DISTRO" in
-        arch)
-            $SUDO pacman -Sy 1>&2
-            $SUDO pacman -S pacman --noconfirm --needed 1>&2
-            $SUDO pacman -Su  --noconfirm 1>&2
-            ;;
-        alpine)
-            $SUDO apk update 1>&2
-            ;;
-        debian | ubuntu)
-            $SUDO apt-get update 1>&2
-            ;;
-    esac
-fi
-
 if [ -n "$BOOTSTRAP" ]; then
+    echo 1>&2 "bootstrapping packages: $BOOTSTRAP"
     case "$DISTRO" in
         arch)
             $SUDO pacman -S --noconfirm --needed $BOOTSTRAP 1>&2

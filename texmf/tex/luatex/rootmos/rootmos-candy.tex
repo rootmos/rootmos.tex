@@ -12,23 +12,33 @@
 \LuaULSetHighLightColor{green}
 \NewDocumentCommand{\hl}{+m}{\highLight{#1}}
 
+%% Set up abbreviations
 \usepackage{xpunctuate}
-\directlua{require("rootmos-abbrev").setup{"english"}}
-
-\iftoggle{@swedish}{%
-    \directlua{require("rootmos-abbrev").setup{"swedish"}}%
-}{}
-
-\iftoggle{@fancy}{%
-    \directlua{require("rootmos-abbrev").setup{"fancy"}}%
-}{}
-
-\iftoggle{@informal}{%
-    \directlua{require("rootmos-abbrev").setup{"informal"}}%
-}{%
-    \directlua{require("rootmos-abbrev").setup{"formal"}}%
+\iftoggle{@noenglish}{}{
+    \directlua{require("rootmos-abbrev"):style("english"):enable()}
 }
+\iftoggle{@swedish}{
+    \directlua{require("rootmos-abbrev"):style("swedish"):enable()}
+}{}
+\iftoggle{@fancy}{
+    \directlua{require("rootmos-abbrev"):style("fancy"):enable()}
+}{}
 
+\iftoggle{@informal}{
+    \directlua{require("rootmos-abbrev").level = 2}
+}{
+    \directlua{require("rootmos-abbrev").level = 1}
+}
+\iftoggle{@notes}{
+    \ifdraft{
+        \directlua{require("rootmos-abbrev").level = 3}
+    }{
+        \directlua{require("rootmos-abbrev").level = 2}
+    }
+}{}
+\iftoggle{@noabbrev}{
+    \directlua{require("rootmos-abbrev").level = 0}
+}{}
 
 % https://tex.stackexchange.com/a/313337
 \newlist{todolist}{itemize}{2}

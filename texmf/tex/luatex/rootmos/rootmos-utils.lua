@@ -33,4 +33,16 @@ function M.capitalize(str)
     return (str:gsub("^%l", string.upper))
 end
 
+-- http://lua-users.org/wiki/SplitJoin
+function M.words(str)
+    local t = {}
+    local function f(word)
+        table.insert(t, word)
+        return ""
+    end
+    if not str:gsub("%S+", f):find"%S" then
+        return t
+    end
+end
+
 return M
