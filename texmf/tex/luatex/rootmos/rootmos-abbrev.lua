@@ -1,14 +1,14 @@
 local M = {
     level = 0,
-    ambiguous = {}
+    ambiguous = {},
+    styles = {},
+    applied = {},
 }
 
 local ambiguous = M.ambiguous
 local capitalize = require("rootmos-utils").capitalize
 local def = require("rootmos-utils").def
 local words = require("rootmos-utils").words
-
-M.styles = {}
 
 --M.styles.english = {
     --eg = "e.g.",
@@ -92,14 +92,16 @@ local mk_macro, is_macro = (function()
     local __mt = { __index = __fn }
 
     function __mt:__tostring()
-        local s = "\\" .. self.name .. "{"
-        for i = 1,self.n do
-            if i > 1 then
-                s = s .. ","
-            end
-            s = s .. string.format("%d=%s", i, self.defs[i])
-        end
-        return s .. "}"
+        return "\\" .. self.name
+        -- TODO: pretty print nil and ambiguous
+        --local s = "\\" .. self.name .. "{"
+        --for i = 1,self.n do
+            --if i > 1 then
+                --s = s .. ","
+            --end
+            --s = s .. string.format("%d=%s", i, self.defs[i])
+        --end
+        --return s .. "}"
     end
 
     function __fn:expand(level, cap1)
@@ -170,6 +172,10 @@ local mk_style, is_style = (function()
         return m
     end
 
+    function __fn:macro(name)
+        return self.macros[name]
+    end
+
     return function(key)
         local S = {
             key = key,
@@ -181,22 +187,20 @@ local mk_style, is_style = (function()
     end
 end)()
 
-function M:style(key)
-    local l = self.styles[key]
+function M.style(key)
+    local l = M.styles[key]
     if l == nil then
         l = mk_style(key)
-        self.styles[key] = l
+        M.styles[key] = l
     end
     return l
 end
 
 local swedish = M:style("swedish")
-local m = swedish:insert("ang", "angående", nil, "ang.")
-print(m:render(1))
-local m = swedish:insert("bla", ambiguous, "bl.a.")
-print(m:render(5))
---swedish:insert("iaf", "i alla fall", nil, "iaf")
---swedish:insert("tex", "till exempel", "t.ex.")
+swedish:insert("ang", "angående", "ang.")
+swedish:insert("bla", ambiguous, "bl.a.", "bla")
+swedish:insert("iaf", "i alla fall", nil, "iaf")
+swedish:insert("tex", "till exempel", "t.ex.", "tex")
 
 local did_common_setup = false
 local function do_common_setup()

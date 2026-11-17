@@ -3,7 +3,8 @@ set -o nounset -o pipefail -o errexit
 go() {
     #lua go.lua
     #template
-    tests/run go.lua
+    #tests/run go.lua
+    make -C tests
 }
 
 template() {
