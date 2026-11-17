@@ -13,66 +13,6 @@ local capitalize = require("rootmos-utils").capitalize
 local def = require("rootmos-utils").def
 local words = require("rootmos-utils").words
 
---M.styles.english = {
-    --eg = "e.g.",
-    --ie = "i.e.",
-    --etc = "etc.",
-
-    --w = "with",
-    --wo = "without",
---}
-
---M.styles.fancy = {
-    --etc = "\\&c.",
---}
-
----- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
---M.styles.swedish = {
-    --ang = "angående",
-    --bla = "bl.a.",
-    --dvs = "dvs.",
-    --etc = "etc.",
-    --ev = "ev.",
-    --iaf = { "i", "alla", "fall" },
-    --iom = { "i", "och", "med" },
-    --jfm = { "jfr", "m." },
-    --jfr = "jfr",
-    --mao = { "med", "andra", "ord" },
-    --mm = "m.m.",
-    --obs = "obs.",
-    --osv = "osv.",
-    --resp = "resp.",
-    --pga = "p.g.a.",
-    --sk = "s.k.",
-    --tex = "t.ex.",
-    --tom = { "t.", "o.", "m." },
---}
-
---M.styles.formal = {
-    --bla = { "bland", "annat" },
-    --dvs = { "det", "vill", "säga" },
-    --jfm = { "jämför", "med" },
-    --jfr = { "jämför" },
-    --obs = { "observera" },
-    --osv = { "och", "så", "vidare" },
-    --resp = "respektive",
-    --pga = { "på", "grund", "av" },
-    --tex = { "till", "exempel" },
-    --tex = { "till", "och", "med" },
---}
-
---M.styles.informal = {
-    --ang = "ang.",
-    --iaf = "iaf",
-    --iom = "iom",
-    --jfm = "jfm",
-    --mao = "mao",
-    --tom = "tom",
-
-    --w = "w/",
-    --wo = "w/o",
---}
-
 function M.render(words)
     local s = ""
 
@@ -225,6 +165,7 @@ function M:style(key)
     return l
 end
 
+---- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
 local swedish = M:style("swedish")
 swedish:insert("ang", "angående", "ang.")
 swedish:insert("bla", ambiguous, "bl.a.", "bla")
@@ -252,10 +193,13 @@ swedish:insert("tom", "till och med", "t.o.m.", "tom")
 
 local english = M:style("english")
 english:insert("eg", "for example", "e.g.", "eg")
-english:insert("etc", "and so on", "etc.", "etc")
+english:insert("etc", "etcetera", "etc.", "etc")
 english:insert("ie", "that is", "i.e.", "ie")
 english:insert("w", "with", nil, "w/")
 english:insert("wo", "without", nil, "w/o")
 english:insert("eo", "either/or", nil, "e/o")
+
+local fancy = M:style("fancy")
+fancy:insert("etc", "etcetera", "\\&c.", "\\&c")
 
 return M

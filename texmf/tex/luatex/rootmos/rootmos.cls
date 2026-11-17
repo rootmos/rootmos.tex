@@ -39,6 +39,11 @@
   \toggletrue{@apa}
 }
 
+\newtoggle{@noenglish}
+\DeclareOption{noenglish}{%
+  \toggletrue{@noenglish}
+}
+
 \newtoggle{@swedish}
 \DeclareOption{swedish}{%
   \toggletrue{@swedish}
@@ -78,6 +83,10 @@
 }
 \DeclareOption{informal}{%
   \toggletrue{@informal}
+}
+\newtoggle{@noabbrev}
+\DeclareOption{noabbrev}{%
+  \toggletrue{@noabbrev}
 }
 
 \newtoggle{@noindentfirst}
