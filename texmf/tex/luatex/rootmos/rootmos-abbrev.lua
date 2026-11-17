@@ -70,13 +70,10 @@ local words = require("rootmos-utils").words
     --wo = "w/o",
 --}
 
-function M.render(words, cap1)
+function M.render(words)
     local s = ""
 
     for i, w in ipairs(words) do
-        if cap1 and i == 1 then
-            w = capitalize(w)
-        end
         if w:sub(-1) == "." then
             s = s .. string.format([[\xperiodafter{%s}]], w:sub(1, -2))
         else
@@ -118,6 +115,18 @@ local mk_macro, is_macro = (function()
         while l > 0 do
             a = self.defs[l]
             if type(a) == "table" then
+                local w = a[1]
+                if cap1 == true then
+                    local W = {}
+                    for i, w in ipairs(a) do
+                        if i == 1 then
+                            W[i] = capitalize(w)
+                        else
+                            W[i] = w
+                        end
+                    end
+                    return W
+                end
                 return a
             end
             l = l - 1
@@ -187,7 +196,7 @@ local mk_style, is_style = (function()
     end
 end)()
 
-function M.style(key)
+function M:style(key)
     local l = M.styles[key]
     if l == nil then
         l = mk_style(key)
