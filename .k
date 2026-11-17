@@ -2,7 +2,8 @@ set -o nounset -o pipefail -o errexit
 
 go() {
     #lua go.lua
-    template
+    #template
+    tests/run go.lua
 }
 
 template() {

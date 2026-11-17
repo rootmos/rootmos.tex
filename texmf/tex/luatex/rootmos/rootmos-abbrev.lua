@@ -1,102 +1,79 @@
-local M = {}
+local M = {
+    level = 0,
+    ambiguous = {}
+}
 
+local ambiguous = M.ambiguous
 local capitalize = require("rootmos-utils").capitalize
+local def = require("rootmos-utils").def
+local words = require("rootmos-utils").words
 
 M.styles = {}
 
-M.styles.english = {
-    eg = "e.g.",
-    ie = "i.e.",
-    etc = "etc.",
+--M.styles.english = {
+    --eg = "e.g.",
+    --ie = "i.e.",
+    --etc = "etc.",
 
-    w = "with",
-    wo = "without",
-}
+    --w = "with",
+    --wo = "without",
+--}
 
-M.styles.fancy = {
-    etc = "\\&c.",
-}
+--M.styles.fancy = {
+    --etc = "\\&c.",
+--}
 
--- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
-M.styles.swedish = {
-    ang = "angående",
-    bla = "bl.a.",
-    dvs = "dvs.",
-    etc = "etc.",
-    ev = "ev.",
-    iaf = { "i", "alla", "fall" },
-    iom = { "i", "och", "med" },
-    jfm = { "jfr", "m." },
-    jfr = "jfr",
-    mao = { "med", "andra", "ord" },
-    mm = "m.m.",
-    obs = "obs.",
-    osv = "osv.",
-    resp = "resp.",
-    pga = "p.g.a.",
-    sk = "s.k.",
-    tex = "t.ex.",
-    tom = { "t.", "o.", "m." },
-}
+---- https://www.isof.se/utforska/publikationer/publikationer/2024-01-22-snabba-skrivregler
+--M.styles.swedish = {
+    --ang = "angående",
+    --bla = "bl.a.",
+    --dvs = "dvs.",
+    --etc = "etc.",
+    --ev = "ev.",
+    --iaf = { "i", "alla", "fall" },
+    --iom = { "i", "och", "med" },
+    --jfm = { "jfr", "m." },
+    --jfr = "jfr",
+    --mao = { "med", "andra", "ord" },
+    --mm = "m.m.",
+    --obs = "obs.",
+    --osv = "osv.",
+    --resp = "resp.",
+    --pga = "p.g.a.",
+    --sk = "s.k.",
+    --tex = "t.ex.",
+    --tom = { "t.", "o.", "m." },
+--}
 
-M.styles.formal = {
-    bla = { "bland", "annat" },
-    dvs = { "det", "vill", "säga" },
-    jfm = { "jämför", "med" },
-    jfr = { "jämför" },
-    obs = { "observera" },
-    osv = { "och", "så", "vidare" },
-    resp = "respektive",
-    pga = { "på", "grund", "av" }
-    tex = { "till", "exempel" },
-    tex = { "till", "och", "med" },
-}
+--M.styles.formal = {
+    --bla = { "bland", "annat" },
+    --dvs = { "det", "vill", "säga" },
+    --jfm = { "jämför", "med" },
+    --jfr = { "jämför" },
+    --obs = { "observera" },
+    --osv = { "och", "så", "vidare" },
+    --resp = "respektive",
+    --pga = { "på", "grund", "av" },
+    --tex = { "till", "exempel" },
+    --tex = { "till", "och", "med" },
+--}
 
-M.styles.informal = {
-    ang = "ang.",
-    iaf = "iaf",
-    iom = "iom",
-    jfm = "jfm",
-    mao = "mao",
-    tom = "tom",
+--M.styles.informal = {
+    --ang = "ang.",
+    --iaf = "iaf",
+    --iom = "iom",
+    --jfm = "jfm",
+    --mao = "mao",
+    --tom = "tom",
 
-    w = "w/",
-    wo = "w/o",
-}
+    --w = "w/",
+    --wo = "w/o",
+--}
 
-local undefined = {}
-
-function M.insert(language, cmd, abbrev, formal, informal, fancy)
-end
-
-function M:language(key)
-    local l = self[key]
-    if l == nil then
-        l = {
-            insert = M.insert,
-        }
-        self[key] = l
-    end
-    return l
-end
-
-local swedish = M:language("swedish")
-swedish:insert("ang", "angående", nil, "ang.")
-swedish:insert("bla", undefined, "bl.a.")
-swedish:insert("iaf", "i alla fall", nil, "iaf")
-swedish:insert("tex", "till exempel", "t.ex.")
-
-local def = require("rootmos-utils").def
-local lparse = require("lparse")
-
-local function abbrev(m, cap1)
-    if type(m) == "string" then
-        m = { m }
-    end
-
+function M.render(words, cap1)
     local s = ""
 
-    for i, w in ipairs(m) do
+    for i, w in ipairs(words) do
         if cap1 and i == 1 then
             w = capitalize(w)
         end
@@ -110,28 +87,136 @@ local function abbrev(m, cap1)
     return s
 end
 
+local mk_macro, is_macro = (function()
+    local __fn = {}
+    local __mt = { __index = __fn }
+
+    function __mt:__tostring()
+        local s = "\\" .. self.name .. "{"
+        for i = 1,self.n do
+            if i > 1 then
+                s = s .. ","
+            end
+            s = s .. string.format("%d=%s", i, self.defs[i])
+        end
+        return s .. "}"
+    end
+
+    function __fn:expand(level, cap1)
+        if level < 0 then
+            error("negative level")
+        end
+
+        local l = math.min(level + 1, self.n)
+        local a = self.defs[l]
+        if a == ambiguous then
+            error(string.format("abbreviation macro (\\%s) is ambiguous at level %d", self.name, l - 1))
+        end
+
+        while l > 0 do
+            a = self.defs[l]
+            if type(a) == "table" then
+                return a
+            end
+            l = l - 1
+        end
+
+        if a == ambiguous then
+            error(string.format("abbreviation macro (\\%s) is ambiguous", self.name))
+        end
+        assert(a == nil)
+        error(string.format("abbreviation macro (\\%s) is undefined", self.name))
+    end
+
+    function __fn:render(level, cap1)
+        return M.render(self:expand(level, cap1))
+    end
+
+    return function(name, ...)
+        local args = table.pack(...)
+        local defs = {}
+        for i = 1,args.n do
+            local a = args[i]
+            if type(a) == "string" then
+                defs[i] = words(a)
+            elseif a == nil or a == ambiguous then
+                defs[i] = a
+            else
+                error(string.format("unexpected macro (%s) expansion [%d]: %s", name, i, a))
+            end
+        end
+
+        return setmetatable({
+            name = name,
+            defs = defs,
+            n = args.n,
+        }, __mt)
+    end, function(x)
+        return getmetatable(x) == __mt
+    end
+end)()
+
+local mk_style, is_style = (function()
+    local __fn = {}
+    local __mt = { __index = __fn }
+
+    function __mt:__tostring()
+        return self.key
+    end
+
+    function __fn:insert(macro, ...)
+        local m = mk_macro(macro, ...)
+        self.macros[macro] = m
+        return m
+    end
+
+    return function(key)
+        local S = {
+            key = key,
+            macros = {},
+        }
+        return setmetatable(S, __mt)
+    end, function(x)
+        return getmetatable(x) == __mt
+    end
+end)()
+
+function M:style(key)
+    local l = self.styles[key]
+    if l == nil then
+        l = mk_style(key)
+        self.styles[key] = l
+    end
+    return l
+end
+
+local swedish = M:style("swedish")
+local m = swedish:insert("ang", "angående", nil, "ang.")
+print(m:render(1))
+local m = swedish:insert("bla", ambiguous, "bl.a.")
+print(m:render(5))
+--swedish:insert("iaf", "i alla fall", nil, "iaf")
+--swedish:insert("tex", "till exempel", "t.ex.")
+
 local did_common_setup = false
 local function do_common_setup()
     if did_common_setup then
         return
     end
+    local lparse = require("lparse")
 
     def("abbrev", function()
-        tex.print(abbrev(lparse.scan("m")))
+        tex.print(M.abbrev(lparse.scan("m")))
     end)
 
     did_common_setup = true
 end
 
-local function capitalize(str)
-    return (str:gsub("^%l", string.upper))
-end
-
-local function apply(s)
+function M.enable(s)
     for k, v in pairs(s) do
-        local w = abbrev(v)
+        local w = M.abbrev(v)
         def(k, function() tex.print(w) end)
-        local W = abbrev(v, true)
+        local W = M.abbrev(v, true)
         def(capitalize(k), function() tex.print(W) end)
     end
 end
@@ -144,7 +229,7 @@ function M.setup(styles)
             texio.write_nl(string.format("applying abbreviation style: %s\n", s))
             s = M.styles[s]
         end
-        apply(s)
+        M.enable(s)
     end
 end
 

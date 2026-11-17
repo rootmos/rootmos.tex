@@ -1,6 +1,3 @@
--- http://lua-users.org/wiki/StringRecipes
-local function capitalize(str)
-    return (str:gsub("^%l", string.upper))
-end
+local A = require("rootmos-abbrev")
 
-print(capitalize("foo"))
+local words = require("rootmos-utils").words
