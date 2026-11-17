@@ -13,21 +13,21 @@
 \NewDocumentCommand{\hl}{+m}{\highLight{#1}}
 
 \usepackage{xpunctuate}
-\directlua{require("rootmos-abbrev").setup{"english"}}
+\directlua{require("rootmos-abbrev"):style("english"):enable()}
 
-\iftoggle{@swedish}{%
-    \directlua{require("rootmos-abbrev").setup{"swedish"}}%
+\iftoggle{@swedish}{
+    \directlua{require("rootmos-abbrev"):style("swedish"):enable()}
 }{}
 
-\iftoggle{@fancy}{%
-    \directlua{require("rootmos-abbrev").setup{"fancy"}}%
-}{}
+%\iftoggle{@fancy}{%
+    %\directlua{require("rootmos-abbrev").setup{"fancy"}}%
+%}{}
 
-\iftoggle{@informal}{%
-    \directlua{require("rootmos-abbrev").setup{"informal"}}%
-}{%
-    \directlua{require("rootmos-abbrev").setup{"formal"}}%
-}
+%\iftoggle{@informal}{%
+    %\directlua{require("rootmos-abbrev").setup{"informal"}}%
+%}{%
+    %\directlua{require("rootmos-abbrev").setup{"formal"}}%
+%}
 
 
 % https://tex.stackexchange.com/a/313337

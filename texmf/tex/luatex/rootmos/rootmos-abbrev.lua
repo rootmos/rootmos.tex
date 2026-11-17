@@ -1,8 +1,11 @@
 local M = {
-    level = 0,
+    -- level 0: expand everything/strictly formal
+    -- level 1: allow formally accepted abbreviations
+    -- level 2: allow most widely accepted abbreviations
+    -- level 3: allow informal abbreviations
+    level = 1,
     ambiguous = {},
     styles = {},
-    applied = {},
 }
 
 local ambiguous = M.ambiguous
@@ -143,6 +146,16 @@ local mk_macro, is_macro = (function()
         return M.render(self:expand(level, cap1))
     end
 
+    function __fn:enable()
+        texio.write_nl("enabling abbreviation macro: " .. self.name)
+        def(self.name, function()
+            tex.print(self:render(M.level))
+        end)
+        def(capitalize(self.name), function()
+            tex.print(self:render(M.level, true))
+        end)
+    end
+
     return function(name, ...)
         local args = table.pack(...)
         local defs = {}
@@ -185,6 +198,13 @@ local mk_style, is_style = (function()
         return self.macros[name]
     end
 
+    function __fn:enable()
+        texio.write_nl("enabling abbreviation style: " .. self.key)
+        for _, m in pairs(self.macros) do
+            m:enable()
+        end
+    end
+
     return function(key)
         local S = {
             key = key,
@@ -208,42 +228,34 @@ end
 local swedish = M:style("swedish")
 swedish:insert("ang", "angående", "ang.")
 swedish:insert("bla", ambiguous, "bl.a.", "bla")
+swedish:insert("dvs", "det vill säga", nil, "m.")
+swedish:insert("etc", "etcetera", "etc.", "etc")
+swedish:insert("ev", ambiguous, "ev.", "ev")
+swedish:insert("from", "från och med", "fr.o.m.")
+swedish:insert("fd", "före detta", "f.d.")
+swedish:insert("forts", "fortsättning", "forts.")
+swedish:insert("fö", "för övrigt", "f.ö.")
 swedish:insert("iaf", "i alla fall", nil, "iaf")
+swedish:insert("jfm", "jämför med", "jfr. med", "jfr. m.", "jfm")
+swedish:insert("jfr", "jämför", "jfr")
+swedish:insert("m", "med", nil, "m.", "m")
+swedish:insert("mao", "med andra ord", nil, "m.a.o.", "mao")
+swedish:insert("mfl", "med flera", "m.fl.")
+swedish:insert("mm", "med mera", "m.m.")
+swedish:insert("obs", "observera", "obs.")
+swedish:insert("osv", "och så vidare", "osv.", "osv")
+swedish:insert("pga", "på grund av", "p.g.a.", "pga")
+swedish:insert("resp", "respektive", "resp.")
+swedish:insert("sk", ambiguous, "s.k.", "sk")
 swedish:insert("tex", "till exempel", "t.ex.", "tex")
+swedish:insert("tom", "till och med", "t.o.m.", "tom")
 
-local did_common_setup = false
-local function do_common_setup()
-    if did_common_setup then
-        return
-    end
-    local lparse = require("lparse")
-
-    def("abbrev", function()
-        tex.print(M.abbrev(lparse.scan("m")))
-    end)
-
-    did_common_setup = true
-end
-
-function M.enable(s)
-    for k, v in pairs(s) do
-        local w = M.abbrev(v)
-        def(k, function() tex.print(w) end)
-        local W = M.abbrev(v, true)
-        def(capitalize(k), function() tex.print(W) end)
-    end
-end
-
-function M.setup(styles)
-    do_common_setup()
-
-    for _, s in ipairs(styles or {}) do
-        if type(s) == "string" then
-            texio.write_nl(string.format("applying abbreviation style: %s\n", s))
-            s = M.styles[s]
-        end
-        M.enable(s)
-    end
-end
+local english = M:style("english")
+english:insert("eg", "for example", "e.g.", "eg")
+english:insert("etc", "and so on", "etc.", "etc")
+english:insert("ie", "that is", "i.e.", "ie")
+english:insert("w", "with", nil, "w/")
+english:insert("wo", "without", nil, "w/o")
+english:insert("eo", "either/or", nil, "e/o")
 
 return M

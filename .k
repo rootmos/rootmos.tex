@@ -2,9 +2,9 @@ set -o nounset -o pipefail -o errexit
 
 go() {
     #lua go.lua
-    #template
+    template
     #tests/run go.lua
-    make -C tests
+    #make -C tests
 }
 
 template() {
@@ -17,13 +17,13 @@ template() {
         export QUICK=
 
         #make clean
-        #make abbrev.draft.pdf
+        make abbrev.draft.pdf
         #make apa.draft.pdf
         #make sections.draft.pdf sections.final.pdf
         #make tlp.draft.pdf
         #make quote.draft.pdf
         #make debug.draft.pdf
-        make a4.draft.pdf
+        #make a4.draft.pdf
 
         #texhelp -e texcount sandbox.tex
         #git show HEAD^:./apa.tex |  ../tools/words -fstrict
