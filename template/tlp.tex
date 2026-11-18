@@ -1,33 +1,60 @@
-\documentclass{rootmos}
+%\documentclass{rootmos}
+\documentclass{article}
 
-\reversemarginpar
-\usepackage{marginnote}
+\usepackage{ifthen}
+
+%\reversemarginpar
+%\usepackage[noadjust]{marginnote}
+
+\usepackage{marginalia}
+\marginaliasetup{
+    pos=right,
+    type=fixed,
+}
 
 \newcounter{TLP}
 \setcounter{TLP}{0}
 
-\AddToHook{para/begin}{%
-    \addtocounter{TLP}{1}%
-    \ifthenelse{\value{TLP}=1}{\marginnote{Foo?}}{}%
-}
-\AddToHook{para/after}{%
-    \addtocounter{TLP}{-1}%
-}
+\newcounter{TLPn}
+\setcounter{TLPn}{0}
 
 \usepackage{kantlipsum}
 
 \title{TLP-style paragraph numbering}
 
+\AtBeginDocument{%
+    \AddToHook{para/begin}{%
+        \ifthenelse{\value{TLP}=0}{%
+            \addtocounter{TLP}{1}%
+            \addtocounter{TLPn}{1}%
+            \marginalia{(\theTLPn)}%
+            \addtocounter{TLP}{-1}%
+        }{}%
+    }%
+}
+
 \begin{document}
 
+An introduction seems to be in order.
+
 \section{A}
+Foo? (\theTLP; \theTLPn)
+
 \kant[1-2]
 
+\subsection{C}
+Bar? (\theTLP; \theTLPn)
+
+\kant[6]
+
 \section{B}
+Baz? (\theTLP; \theTLPn)
+
 \kant[3]
+
 \begin{itemize}
     \item \kant[4]
-    \item \kant[5]
+    \item (\theTLP; \theTLPn) \kant[5]
 \end{itemize}
 
 \end{document}
