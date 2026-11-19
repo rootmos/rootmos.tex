@@ -48,3 +48,9 @@
 \newcommand{\xmark}{\ding{55}}%
 \newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}\hspace{-2.5pt}}
 \newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+\NewDocumentCommand{\Figure}{O{1.0} m}{%
+    \begin{figure}%
+        \includegraphics[width=#1\textwidth,keepaspectratio]{#2}%
+    \end{figure}%
+}
