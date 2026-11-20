@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+
+import os
+import shutil
+import subprocess
+import sys
+from collections import namedtuple
+from typing import Generator
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+WORDS = os.path.join(SCRIPT_DIR, "words")
+
+GIT = shutil.which("git")
+assert GIT is not None
+
+# https://git.sr.ht/~rootmos/git-hack/tree/fb654787b38dd34500a45a448248e137b90b9561/item/status.py
+Ordinary = namedtuple("Ordinary", [ "X", "Y", "sub", "mH", "mI", "mW", "hH", "hI", "path" ])
+Rename = namedtuple("Rename", [ "X", "Y", "sub", "mH", "mI", "mW", "hH", "hI", "score", "path", "origPath" ])
+Untracked = namedtuple("Untracked", [ "path" ])
+Ignored = namedtuple("Ignored", [ "path" ])
+def parse(bs: str) -> Generator[Ordinary | Rename | Untracked | Ignored]:
+    i = 0
+    N = len(bs)
+
+    def skip(sep="\0"):
+        nonlocal i
+        while bs[i] != sep:
+            i += 1
+        i += 1
+
+    def until(sep=" "):
+        nonlocal i
+        s = ""
+        while True:
+            c = bs[i]
+            i += 1
+            if c == sep:
+                return s
+            s += c
+
+    def parse_sub(s):
+        return None if s == "N..." else s
+    def parse_object(s):
+        return None if s == "0000000000000000000000000000000000000000" else s
+    def parse_XY(s) -> tuple[str | None, str | None]:
+        assert len(s) == 2
+        return (None if s[0] == "." else s[0], None if s[1] == "." else s[1])
+
+    while i < N:
+        match bs[i]:
+            case "#":
+                skip()
+            case "?":
+                skip(" ")
+                yield Untracked(path = until("\0"))
+            case "!":
+                skip(" ")
+                yield Ignored(path = until("\0"))
+            case "1":
+                skip(" ")
+                X, Y = parse_XY(until())
+                yield Ordinary(
+                    X = X, Y = Y,
+                    sub = parse_sub(until()),
+                    mH = until(),
+                    mI = until(),
+                    mW = until(),
+                    hH = parse_object(until()),
+                    hI = parse_object(until()),
+                    path = until("\0"),
+                )
+            case "2":
+                skip(" ")
+                X, Y = parse_XY(until())
+                yield Rename(
+                    X = X, Y = Y,
+                    sub = parse_sub(until()),
+                    mH = until(),
+                    mI = until(),
+                    mW = until(),
+                    hH = parse_object(until()),
+                    hI = parse_object(until()),
+                    score = until(),
+                    path = until("\0"),
+                    origPath = until("\0"),
+                )
+            case k:
+                raise NotImplementedError(k)
+    assert i == N
+
+
+def words_in_blob(blobid: str) -> int:
+    cmdline = [GIT, "cat-file", "blob", blobid]
+    blob = subprocess.check_output(cmdline)
+
+    cmdline = [WORDS, "-fstrict"]
+    raw = subprocess.check_output(cmdline, input=blob)
+    return int(raw)
+
+def main():
+    cmdline = [GIT, "status", "-z", "--porcelain=v2", "--ignore-submodules"]
+    status = subprocess.check_output(cmdline, text=True)
+    for r in parse(status):
+        if isinstance(r, Untracked) or isinstance(r, Ignored):
+            continue
+        if not r.path.endswith(".tex"):
+            continue
+
+        a = 0 if r.hH is None else words_in_blob(r.hH)
+        b = 0 if r.hI is None else words_in_blob(r.hI)
+
+        msg = f"{r.path}: "
+        diff = b - a
+        if a == 0 or b == 0:
+            msg += f"{diff:+}"
+        else:
+            msg += f"{b} ({diff:+})"
+
+        print(msg)
+
+if __name__ == "__main__":
+    main()

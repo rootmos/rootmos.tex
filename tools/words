@@ -15,6 +15,11 @@ while getopts "o:f:-" OPT; do
     esac
 done
 shift $((OPTIND-1))
+
+if [[ $# -gt 1 ]]; then
+    echo 1>&2 "refusing to process more than one file at a time"
+    exit 1
+fi
 INPUT=${1--}
 
 TMP=$(mktemp -d)
@@ -74,8 +79,10 @@ EOF
 
 if [[ $FORMAT = lua ]]; then
     cp "$TMP/words.lua" "$OUTPUT"
-elif [[ $FORMAT = pretty ]]; then
+elif [[ $FORMAT = full ]]; then
     _lua 'string.format("%d (+%d=%d)", w.text, w.other, w.text+w.other)'
+elif [[ $FORMAT = pretty ]]; then
+    _lua '(w.other == 0 and w.text) or string.format("%d (+%d=%d)", w.text, w.other, w.text+w.other)'
 elif [[ $FORMAT = strict ]]; then
     _lua 'w.text'
 elif [[ $FORMAT = sum ]]; then

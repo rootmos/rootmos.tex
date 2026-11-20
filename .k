@@ -24,8 +24,11 @@ template() {
         #make quote.draft.pdf quote.final.pdf
         #make debug.draft.pdf
         #make a4.draft.pdf a4.final.pdf
-        make candy.draft.pdf
+        #make candy.draft.pdf
 
+        ../tools/git-staged-words
+
+        #../tools/words - <abbrev.tex
         #texhelp -e texcount sandbox.tex
         #git show HEAD^:./apa.tex |  ../tools/words -fstrict
     )
