@@ -1,16 +1,17 @@
 \usepackage{cancel}
-
 \usepackage{xspace}
-\usepackage{wasysym}
-\newcommand{\NB}{$\APLcomment$\xspace}
 
 % TODO has to be a way to directly insert the character
+\usepackage{wasysym}
 \DeclareMathSymbol\Leadsto {\mathrel}{wasy}{"3B}
 \renewcommand{\leadsto}{\unskip\ \ensuremath{\Leadsto}\xspace}
 
 \usepackage{xcolor,luacolor,lua-ul}
-\LuaULSetHighLightColor{green}
-\NewDocumentCommand{\hl}{+m}{\highLight{#1}}
+\LuaULSetHighLightColor{lime}
+\NewDocumentCommand{\hl}{o +m}{\highLight[#1]{#2}}
+
+\NewDocumentCommand{\NB}{}{\ensuremath{\large\APLcomment}}
+\NewDocumentCommand{\nb}{+m}{\highLight[pink]{\highLight[purple]{\,\NB\,}\xspace#1\unskip}}
 
 %% Set up abbreviations
 \usepackage{xpunctuate}

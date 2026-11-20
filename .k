@@ -23,7 +23,8 @@ template() {
         #make tlp.draft.pdf
         #make quote.draft.pdf quote.final.pdf
         #make debug.draft.pdf
-        make a4.draft.pdf a4.final.pdf
+        #make a4.draft.pdf a4.final.pdf
+        make candy.draft.pdf
 
         #texhelp -e texcount sandbox.tex
         #git show HEAD^:./apa.tex |  ../tools/words -fstrict
